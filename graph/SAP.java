@@ -1,5 +1,7 @@
 package graph;
 
+import java.util.Iterator;
+
 import edu.princeton.cs.algs4.Digraph;
 
 public class SAP {
@@ -12,22 +14,33 @@ public class SAP {
 
     // length of shortest ancestral path between v and w; -1 if no such path
     public int length(int v, int w) {
-        DiDepthFirstOrder diSort = new DiDepthFirstOrder(g);
-        // Iterable<Integer> topoSorted = DiDepthFirstOrder
-        // Topo sort DAG
-        // Iterate through nodes in order
-        // For each node in adj[] of curr node, check if there is a path to both desired
-        // nodes
-        // When this first occurs, ancestor has been found
-        // Return distance to each node as length
-        DiBreadthFirstPaths bfsPaths = new DiBreadthFirstPaths(g, v);
-        return bfsPaths.length(w);
+        return pathTo(v, w, false);
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path;
     // -1 if no such path
     public int ancestor(int v, int w) {
-        return -1;
+        return pathTo(v, w, true);
+    }
+
+    private int pathTo(int v, int w, boolean ancestor) {
+        // Topo sort DAG
+        DiDepthFirstOrder diSort = new DiDepthFirstOrder(g);
+        Iterable<Integer> topoSorted = diSort.reversePost();
+        Iterator<Integer> it = topoSorted.iterator();
+        int res = -1;
+
+        DiBFSPaths bfsSearchV = new DiBFSPaths(g, v); // For each vertex, check for path to v and w
+        DiBFSPaths bfsSearchW = new DiBFSPaths(g, w); // For each vertex, check for path to v and w
+        while (it.hasNext()) { // Iterate through nodes in order
+            int curr = it.next();
+            if (bfsSearchV.dist(curr) != -1 && bfsSearchW.dist(curr) != -1) // If each vertex -> curr, it's an ancestor
+                if (ancestor)
+                    res = curr;
+                else
+                    res = bfsSearchV.dist(curr) + bfsSearchW.dist(curr);
+        }
+        return res;
     }
 
     // length of shortest ancestral path between any vertex in v and any vertex in

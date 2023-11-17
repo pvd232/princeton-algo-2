@@ -1,6 +1,7 @@
 package graph;
 
 import java.util.Stack;
+import edu.princeton.cs.algs4.Digraph;
 
 public class DiDepthFirstOrder {
     private boolean[] marked;
@@ -8,8 +9,8 @@ public class DiDepthFirstOrder {
 
     public DiDepthFirstOrder(Digraph g) {
         reversePost = new Stack<Integer>();
-        marked = new boolean[g.vertices()];
-        for (int v = 0; v < g.vertices(); v++)
+        marked = new boolean[g.V()];
+        for (int v = 0; v < g.V(); v++)
             if (!marked[v])
                 dfs(g, v);
     }

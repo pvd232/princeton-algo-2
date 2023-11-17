@@ -19,29 +19,23 @@ public class WordNet {
         if (synsets == null || hypernyms == null)
             throw new IllegalArgumentException();
 
-        In synIn = new In(synsets); // List of synset vertices
-        In hyperIn = new In(hypernyms); // List of adjacent synset vertices
-
         vertices = new ArrayList<>();
-        int graphLen = 0;
+        In synIn = new In(synsets), hyperIn = new In(hypernyms);
 
         // Create adjacent vertices array to store adjacent sets while processing input
         ArrayList<Bag<Integer>> adj = new ArrayList<>();
 
+        int graphLen = 0;
         while (synIn.hasNextLine() && hyperIn.hasNextLine()) {
-            graphLen++;
-
+            graphLen++; // need fixed len for Graph constructor
             vertices.add(new Synset(synIn.readLine())); // Create synset from curr line
-            Bag<Integer> vAdj = new Bag<Integer>(); // Create bag for adjacent vertices
 
-            String hyperLine = hyperIn.readLine(); // Read in adjacent vertices
-            String[] rawAdj = hyperLine.split(",");
-
+            String[] rawAdj = hyperIn.readLine().split(","); // Read in adjacent vertices
             Bag<Integer> intAdj = new Bag<Integer>();
-            for (int i = 0; i < rawAdj.length; i++)
+            for (int i = 1; i < rawAdj.length; i++) // index on one b/c first value of hypernym line is id of vertex
                 intAdj.add(Integer.parseInt(rawAdj[i]));
 
-            adj.add(vAdj);
+            adj.add(intAdj);
         }
         // Populate digraph
         g = new Digraph(graphLen);
@@ -65,8 +59,12 @@ public class WordNet {
         private String first;
 
         private Synset(String csvLine) {
+            syns = new HashSet<>();
+
             String[] parts = csvLine.split(",");
             String[] synsList = parts[1].split(" ");
+
+            assert synsList.length >= 1;
             first = synsList[0];
             for (int i = 0; i < synsList.length; i++)
                 syns.add(synsList[i]);
@@ -92,27 +90,38 @@ public class WordNet {
     public boolean isNoun(String word) {
         if (word == null)
             throw new IllegalArgumentException();
-        boolean hasWord = (getId(word) != -1);
-        return hasWord;
+        return (getId(word).size() > 0);
     }
 
     // Binary search to find id for given noun
-    private int getId(String word) {
+    private ArrayList<Integer> getId(String word) {
+        ArrayList<Integer> ids = new ArrayList<>();
         int lo = 0, hi = vertices.size();
-        int mid = ((hi - lo) + lo) / 2;
+        int mid = lo + (hi - lo) / 2;
         while (hi >= lo) {
             Synset s = vertices.get(mid);
-            if (s.contains(word))
-                return mid;
-            else if (s.first.compareTo(word) > 0) {
-                hi = mid;
-                mid = ((hi - lo) + lo) / 2;
+            if (s.contains(word)) {
+                ids.add(mid);
+                int i = mid + 1;
+                while (i < vertices.size() && vertices.get(i).contains(word)) {
+                    ids.add(i);
+                    i++;
+                }
+                int j = mid - 1;
+                while (j > 0 && vertices.get(j).contains(word)) {
+                    ids.add(j);
+                    j--;
+                }
+                return ids;
+            } else if (s.first.compareTo(word) > 0) {
+                hi = mid - 1;
+                mid = lo + (hi - lo) / 2;
             } else {
-                lo = mid;
-                mid = ((hi - lo) + lo) / 2;
+                lo = mid + 1;
+                mid = lo + (hi - lo) / 2;
             }
         }
-        return -1;
+        return ids;
     }
 
     // distance between nounA and nounB (defined below)
@@ -120,13 +129,15 @@ public class WordNet {
         if (nounA == null || nounB == null)
             throw new IllegalArgumentException();
 
-        int a = getId(nounA);
-        int b = getId(nounB);
-        if (a == -1 || b == -1)
-            throw new IllegalArgumentException();
+        ArrayList<Integer> a = getId(nounA);
+        ArrayList<Integer> b = getId(nounB);
 
-        int dist = sap.length(a, b);
-        return dist;
+        if (a.size() == 0 || b.size() == 0)
+            throw new IllegalArgumentException();
+        if (a.size() == 1 && b.size() == 1)
+            return sap.length(a.get(0), b.get(0));
+        else
+            return sap.length(a, b);
     }
 
     // a synset (second field of synsets.txt) that is the common ancestor of nounA
@@ -140,6 +151,23 @@ public class WordNet {
 
     // do unit testing of this class
     public static void main(String[] args) {
+        WordNet testNet = new WordNet(args[0], args[1]);
+        assert testNet.g.V() == testNet.vertices.size();
+        assert testNet.isNoun("miracle");
+        assert !testNet.isNoun("gooblegah");
 
+        // Brute force test nouns
+        In syn = new In(args[0]);
+        int nounCount = 0;
+        while (syn.hasNextLine()) {
+            String[] parts = syn.readLine().split(",");
+            String[] synsList = parts[1].split(" ");
+            nounCount += synsList.length;
+        }
+        ArrayList<String> nounsList = (ArrayList<String>) testNet.nouns();
+        assert nounCount == nounsList.size();
+
+        // Distance
+        assert testNet.distance("Lamaze_method_of_childbirth", "Bradley_method_of_childbirth") != -1;
     }
 }
