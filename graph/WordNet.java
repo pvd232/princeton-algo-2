@@ -169,12 +169,15 @@ public class WordNet {
         assert testDist == 2;
 
         String testAncestor = testNet.sap(testNounA, testNounB);
-        assert testAncestor.equals("natural_childbirth");
+        assert testAncestor.contains("natural_childbirth");
 
         String testNounC = "miracle", testNounD = "increase";
         int testDist2 = testNet.distance(testNounC, testNounD);
 
         assert testDist2 != -1;
         assert testDist2 == 3;
+
+        String testAncestorB = testNet.sap(testNounC, testNounD);
+        assert testAncestorB.contains("happening");
     }
 }
