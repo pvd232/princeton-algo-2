@@ -23,24 +23,32 @@ public class SAP {
         return pathTo(v, w, true);
     }
 
-    private int pathTo(int v, int w, boolean ancestor) {
+    // Arch Note: merged ancestor/dist logic in pathTo b/c min dist -> ancestor
+    private int pathTo(int v, int w, boolean getAncestor) {
         // Topo sort DAG
         DiDepthFirstOrder diSort = new DiDepthFirstOrder(g);
-        Iterable<Integer> topoSorted = diSort.reversePost();
-        Iterator<Integer> it = topoSorted.iterator();
-        int res = -1;
 
-        DiBFSPaths bfsSearchV = new DiBFSPaths(g, v); // For each vertex, check for path to v and w
-        DiBFSPaths bfsSearchW = new DiBFSPaths(g, w); // For each vertex, check for path to v and w
-        while (it.hasNext()) { // Iterate through nodes in order
-            int curr = it.next();
-            if (bfsSearchV.dist(curr) != -1 && bfsSearchW.dist(curr) != -1) // If each vertex -> curr, it's an ancestor
-                if (ancestor)
-                    res = curr;
-                else
-                    res = bfsSearchV.dist(curr) + bfsSearchW.dist(curr);
+        // Get iterable
+        Iterator<Integer> topoSortedIt = diSort.reversePost().iterator();
+
+        int dist = -1, ancestor = -1;
+        // For each vertex, check for path to v and w
+        DiBFSPaths bfsSearchV = new DiBFSPaths(g, v), bfsSearchW = new DiBFSPaths(g, w);
+        while (topoSortedIt.hasNext()) { // Iterate through nodes in order
+            int curr = topoSortedIt.next();
+
+            int vDist = bfsSearchV.dist(curr), wDist = bfsSearchW.dist(curr);
+            if (vDist != -1 && wDist != -1) { // If each vertex -> curr, it's an ancestor
+                if (dist == -1 || vDist + wDist < dist) {
+                    dist = vDist + wDist;
+                    ancestor = curr;
+                }
+            }
         }
-        return res;
+        if (getAncestor)
+            return ancestor;
+        else
+            return dist;
     }
 
     // length of shortest ancestral path between any vertex in v and any vertex in
