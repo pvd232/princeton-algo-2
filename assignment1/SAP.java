@@ -1,5 +1,3 @@
-package graph;
-
 import java.util.Iterator;
 
 import edu.princeton.cs.algs4.Digraph;
@@ -69,12 +67,12 @@ public class SAP {
         Iterator<Integer> vIt = v.iterator(), wIt = w.iterator();
         while (vIt.hasNext()) {
             Integer vNext = vIt.next();
-            if (vNext >= g.V() || vNext <= 0)
+            if (vNext >= g.V() || vNext <= 0 || vNext == null)
                 throw new IllegalArgumentException();
         }
         while (wIt.hasNext()) {
             Integer wNext = wIt.next();
-            if (wNext >= g.V() || wNext <= 0)
+            if (wNext >= g.V() || wNext <= 0 || wNext == null)
                 throw new IllegalArgumentException();
         }
 
@@ -88,12 +86,12 @@ public class SAP {
         Iterator<Integer> vIt = v.iterator(), wIt = w.iterator();
         while (vIt.hasNext()) {
             Integer vNext = vIt.next();
-            if (vNext >= g.V() || vNext <= 0)
+            if (vNext >= g.V() || vNext <= 0 || vNext == null)
                 throw new IllegalArgumentException();
         }
         while (wIt.hasNext()) {
             Integer wNext = wIt.next();
-            if (wNext >= g.V() || wNext <= 0)
+            if (wNext >= g.V() || wNext <= 0 || wNext == null)
                 throw new IllegalArgumentException();
         }
 
