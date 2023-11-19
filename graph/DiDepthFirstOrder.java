@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.Digraph;
 
 public class DiDepthFirstOrder {
     private boolean[] marked;
-    private Stack<Integer> reversePost;
+    final private Stack<Integer> reversePost;
 
     public DiDepthFirstOrder(Digraph g) {
         reversePost = new Stack<Integer>();

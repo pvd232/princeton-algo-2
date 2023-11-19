@@ -12,10 +12,10 @@ import java.util.LinkedList;
 import java.util.Iterator;
 
 public class WordNet {
-    private ArrayList<Synset> verts;
-    private Digraph g;
-    private SAP sap;
-    private HashMap<String, LinkedList<Integer>> map;
+    private final ArrayList<Synset> verts;
+    private final Digraph g;
+    private final SAP sap;
+    private final HashMap<String, LinkedList<Integer>> map;
 
     // Constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
@@ -73,9 +73,9 @@ public class WordNet {
     }
 
     private class Synset {
-        private HashSet<String> syns;
-        private String synTxt;
-        private Integer id;
+        private final HashSet<String> syns;
+        private final String synTxt;
+        private final Integer id;
 
         private Synset(String csvLine) {
             String[] parts = csvLine.split(","), synsList = parts[1].split(" ");
@@ -86,19 +86,13 @@ public class WordNet {
             for (int i = 0; i < synsList.length; i++)
                 syns.add(synsList[i]);
         }
-
-        // public boolean contains(String noun) {
-        // return synTxt.contains(noun);
-        // }
     }
 
     // returns all WordNet nouns
     public Iterable<String> nouns() {
         ArrayList<String> res = new ArrayList<>();
         for (int i = 0; i < verts.size(); i++) {
-            String[] nouns = verts.get(i).syns.toArray(new String[verts.get(i).syns.size()]);
-            for (int j = 0; j < nouns.length; j++)
-                res.add(nouns[j]);
+            res.addAll(verts.get(i).syns);
         }
         return res;
     }
@@ -125,7 +119,7 @@ public class WordNet {
             throw new IllegalArgumentException();
 
         HashSet<Integer> a = subset(nounA), b = subset(nounB);
-        if (a.size() == 0 || b.size() == 0)
+        if (a.isEmpty() || b.isEmpty())
             throw new IllegalArgumentException(nounA + " " + nounB);
         else if (a.size() == 1 && b.size() == 1)
             return sap.length(a.iterator().next(), b.iterator().next());
@@ -139,7 +133,7 @@ public class WordNet {
             throw new IllegalArgumentException();
 
         HashSet<Integer> a = subset(nounA), b = subset(nounB);
-        if (a.size() == 0 || b.size() == 0)
+        if (a.isEmpty() || b.isEmpty())
             throw new IllegalArgumentException();
         else if (a.size() == 1 && b.size() == 1)
             return verts.get(sap.ancestor(a.iterator().next(), b.iterator().next())).synTxt;

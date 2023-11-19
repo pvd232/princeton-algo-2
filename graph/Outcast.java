@@ -4,7 +4,7 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
 public class Outcast {
-    private WordNet wNet;
+    private final WordNet wNet;
 
     public Outcast(WordNet wordnet) // constructor takes a WordNet object
     {
