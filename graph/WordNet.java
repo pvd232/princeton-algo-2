@@ -75,7 +75,7 @@ public class WordNet {
     private class Synset {
         private final HashSet<String> syns;
         private final String synTxt;
-        private final Integer id;
+        private final int id;
 
         private Synset(String csvLine) {
             String[] parts = csvLine.split(","), synsList = parts[1].split(" ");
@@ -91,8 +91,8 @@ public class WordNet {
     // returns all WordNet nouns
     public Iterable<String> nouns() {
         ArrayList<String> res = new ArrayList<>();
-        for (int i = 0; i < verts.size(); i++) {
-            res.addAll(verts.get(i).syns);
+        for (String key : map.keySet()) {
+            res.add(key);
         }
         return res;
     }

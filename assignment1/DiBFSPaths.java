@@ -5,18 +5,15 @@ import edu.princeton.cs.algs4.Digraph;
 
 public class DiBFSPaths {
     private boolean[] marked;
-    private int[] edgeTo; // list of directed edges on shortest path
     private int[] distTo; // distance from each vertex to given vertex
 
     public DiBFSPaths(Digraph g, int s) {
-        edgeTo = new int[g.V()];
         distTo = new int[g.V()];
         marked = new boolean[g.V()];
         bfs(g, s);
     }
 
     public DiBFSPaths(Digraph g, Iterable<Integer> s) {
-        edgeTo = new int[g.V()];
         distTo = new int[g.V()];
         marked = new boolean[g.V()];
         bfs(g, s);
@@ -32,7 +29,6 @@ public class DiBFSPaths {
                 if (!marked[w]) {
                     q.add(w);
                     marked[w] = true;
-                    edgeTo[w] = v;
                     distTo[w] = distTo[v] + 1;
                 }
             }
@@ -54,7 +50,6 @@ public class DiBFSPaths {
                 if (!marked[w]) {
                     q.add(w);
                     marked[w] = true;
-                    edgeTo[w] = v;
                     distTo[w] = distTo[v] + 1;
                 }
             }
@@ -62,7 +57,7 @@ public class DiBFSPaths {
     }
 
     public int dist(int w) {
-        if (marked[w] == false)
+        if (!marked[w])
             return -1;
         else
             return distTo[w];

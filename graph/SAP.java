@@ -8,20 +8,20 @@ import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SAP {
-    private Digraph g;
-    private DiDepthFirstOrder topoSort;
+    private final Digraph g;
+    private final DiDepthFirstOrder topoSort;
 
     // constructor takes a digraph (not necessarily a DAG)
     public SAP(Digraph G) {
         if (G == null)
             throw new IllegalArgumentException();
-        g = G;
-        topoSort = new DiDepthFirstOrder(G);
+        g = new Digraph(G);
+        topoSort = new DiDepthFirstOrder(g);
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
     public int length(int v, int w) {
-        if (v >= g.V() || w >= g.V())
+        if (v >= g.V() || w >= g.V() || v < 0 || w < 0)
             throw new IllegalArgumentException();
         DiBFSPaths bfsV = new DiBFSPaths(g, v), bfsW = new DiBFSPaths(g, w);
         return pathTo(bfsV, bfsW, false);
@@ -30,7 +30,7 @@ public class SAP {
     // a common ancestor of v and w that participates in a shortest ancestral path;
     // -1 if no such path
     public int ancestor(int v, int w) {
-        if (v >= g.V() || w >= g.V())
+        if (v >= g.V() || w >= g.V() || v < 0 || w < 0)
             throw new IllegalArgumentException();
         DiBFSPaths bfsV = new DiBFSPaths(g, v), bfsW = new DiBFSPaths(g, w);
         return pathTo(bfsV, bfsW, true);
@@ -62,15 +62,17 @@ public class SAP {
     // length of shortest ancestral path between any vertex in v and any vertex in
     // w; -1 if no such path
     public int length(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null)
+            throw new IllegalArgumentException();
         Iterator<Integer> vIt = v.iterator(), wIt = w.iterator();
         while (vIt.hasNext()) {
             Integer vNext = vIt.next();
-            if (vNext >= g.V() || vNext <= 0)
+            if (vNext == null || vNext >= g.V() || vNext < 0)
                 throw new IllegalArgumentException();
         }
         while (wIt.hasNext()) {
             Integer wNext = wIt.next();
-            if (wNext >= g.V() || wNext <= 0)
+            if (wNext == null || wNext >= g.V() || wNext < 0)
                 throw new IllegalArgumentException();
         }
 
@@ -81,15 +83,17 @@ public class SAP {
     // a common ancestor that participates in shortest ancestral path; -1 if no such
     // path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null)
+            throw new IllegalArgumentException();
         Iterator<Integer> vIt = v.iterator(), wIt = w.iterator();
         while (vIt.hasNext()) {
             Integer vNext = vIt.next();
-            if (vNext >= g.V() || vNext <= 0)
+            if (vNext == null || vNext >= g.V() || vNext < 0)
                 throw new IllegalArgumentException();
         }
         while (wIt.hasNext()) {
             Integer wNext = wIt.next();
-            if (wNext >= g.V() || wNext <= 0)
+            if (wNext == null || wNext >= g.V() || wNext < 0)
                 throw new IllegalArgumentException();
         }
 
