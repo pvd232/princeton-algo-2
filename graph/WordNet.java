@@ -115,13 +115,11 @@ public class WordNet {
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
-        if (nounA == null || nounB == null)
+        if (nounA == null || nounB == null || !isNoun(nounA) || !isNoun(nounB))
             throw new IllegalArgumentException();
 
         HashSet<Integer> a = subset(nounA), b = subset(nounB);
-        if (a.isEmpty() || b.isEmpty())
-            throw new IllegalArgumentException(nounA + " " + nounB);
-        else if (a.size() == 1 && b.size() == 1)
+        if (a.size() == 1 && b.size() == 1)
             return sap.length(a.iterator().next(), b.iterator().next());
         else
             return sap.length(a, b);
@@ -129,13 +127,11 @@ public class WordNet {
 
     // a synset that is the common ancestor of nounA and nounB
     public String sap(String nounA, String nounB) {
-        if (nounA == null || nounB == null)
+        if (nounA == null || nounB == null || !isNoun(nounA) || !isNoun(nounB))
             throw new IllegalArgumentException();
 
         HashSet<Integer> a = subset(nounA), b = subset(nounB);
-        if (a.isEmpty() || b.isEmpty())
-            throw new IllegalArgumentException();
-        else if (a.size() == 1 && b.size() == 1)
+        if (a.size() == 1 && b.size() == 1)
             return verts.get(sap.ancestor(a.iterator().next(), b.iterator().next())).synTxt;
         else
             return verts.get(sap.ancestor(a, b)).synTxt;
