@@ -1,73 +1,91 @@
 package graph;
 
 import edu.princeton.cs.algs4.Picture;
+import edu.princeton.cs.algs4.StdPicture;
 import edu.princeton.cs.algs4.DirectedEdge;
 import edu.princeton.cs.algs4.EdgeWeightedDigraph;
 import java.awt.Color;
+import java.util.HashSet;
 
-// The Plan
-// Create EW DAG using energy as weight for vertices 
-// 
 public class SeamCarver {
-    Picture pic;
-    EdgeWeightedDigraph eg;
-    AcyclicSP sp;
+    private Picture pic;
+    private final int len;
+    private final EdgeWeightedDigraph vEWG;
+    private final EdgeWeightedDigraph hEWG;
+    private final AcyclicSP vSP;
+    private final AcyclicSP hSP;
 
-    // create a seam carver object based on the given picture
+    // Create a seam carver object based on the given picture
     public SeamCarver(Picture picture) {
         pic = new Picture(picture);
-        eg = new EdgeWeightedDigraph(pic.height() * pic.width() + 1);
-        createDAG();
-        sp = new AcyclicSP(eg, 0);
+        len = width() * height();
+        vEWG = new EdgeWeightedDigraph(height() * width() + 1);
+        hEWG = new EdgeWeightedDigraph(height() * width() + 1);
+        createDAG(true, vEWG);
+        createDAG(false, hEWG);
+        vSP = new AcyclicSP(vEWG, 0);
+        hSP = new AcyclicSP(hEWG, 0);
     }
 
-    private void createDAG() {
-        // connect virtual top (v=0) to all pixels in row 0
-        for (int i = 1; i < pic.width(); i++)
-            eg.addEdge(new DirectedEdge(0, i, 1000));
+    private void createDAG(boolean vertical, EdgeWeightedDigraph dag) {
+        // Populate digraph
+        for (int i = 0; i < height(); i++)
+            for (int j = 0; j < width(); j++)
+                connPixels(j, i, vertical, dag);
 
-        // populate digraph
-        for (int i = 0; i < pic.height(); i++)
-            for (int j = 0; j < pic.width(); j++)
-                connPixels(i, j, true);
-        // connect virtual bottom (v=width * height - 1) to all pixels in row -1
-        for (int i = (pic.height() - 1) * pic.width(); i < pic.height() * pic.width(); i++)
-            eg.addEdge(new DirectedEdge(i, pic.height() * pic.width(), 1000));
+        // Connect virtual top and virtual bottom
+        if (vertical) {
+            for (int i = 1; i < width(); i++) // Conn vTop to row 0
+                dag.addEdge(new DirectedEdge(0, i, 1000));
+            for (int i = (height() - 1) * width(); i < len; i++) // Conn vBottom to row height - 1
+                dag.addEdge(new DirectedEdge(i, len, 1000));
+        } else {
+            for (int i = 1; i < height(); i++) // Conn vTop to col 0
+                dag.addEdge(new DirectedEdge(0, i * width(), 1000));
+            for (int i = 1; i < height(); i++) // Conn vBottom to col width - 1
+                dag.addEdge(new DirectedEdge(i * width() - 1, len, 1000));
+        }
+
     }
 
-    private void connPixels(int x, int y, boolean vertical) {
-        // skip virtual top and bottom
-        if (x == 0 && y == 0 || x == pic.width() - 1 && y == pic.height() - 1)
+    private void connPixels(int x, int y, boolean vertical, EdgeWeightedDigraph dag) {
+        // Skip virtual top and bottom
+        if (x == 0 && y == 0 || x == width() - 1 && y == height() - 1)
             return;
         int[] dir = new int[] { -1, 0, 1 };
-        for (int dx : dir) {
-            int adjX = dx + x;
-            int adjY = y + 1;
-            if (vertical)
-                if (adjX >= 0 && adjX < pic.width() && adjY < pic.height())
-                    eg.addEdge(new DirectedEdge(x + y * pic.width(), adjX + adjY * pic.width(), energy(adjX, adjY)));
-            // else
+        for (int d : dir) {
+            int adjX = x;
+            int adjY = y;
+            if (vertical) {
+                adjX = adjX + d;
+                adjY = adjY + 1;
+            } else {
+                adjY = adjY + d;
+                adjX = adjX + 1;
+            }
+            if (adjX >= 0 && adjX < width() && adjY >= 0 && adjY < height())
+                dag.addEdge(new DirectedEdge(x + y * width(), adjX + adjY * width(), energy(adjX, adjY)));
         }
     }
 
-    // current picture
+    // Current picture
     public Picture picture() {
         return pic;
     }
 
-    // width of current picture
+    // Width of current picture
     public int width() {
         return pic.width();
     }
 
-    // height of current picture
+    // Height of current picture
     public int height() {
         return pic.height();
     }
 
-    // energy of pixel at column x and row y
+    // Energy of pixel at column x and row y
     public double energy(int x, int y) {
-        if (x == 0 || x == pic.width() - 1 || y == 0 || y == pic.height() - 1)
+        if (x == 0 || x == width() - 1 || y == 0 || y == height() - 1)
             return 1000;
         double xGrad = gradientSq(x + 1, y, x - 1, y);
         double yGrad = gradientSq(x, y + 1, x, y - 1);
@@ -83,15 +101,10 @@ public class SeamCarver {
         return rD + gD + bD;
     }
 
-    // sequence of indices for horizontal seam
+    // Sequence of indices for horizontal seam
     public int[] findHorizontalSeam() {
-        return new int[0];
-    }
-
-    // sequence of indices for vertical seam
-    public int[] findVerticalSeam() {
-        Iterable<DirectedEdge> pathTo = sp.pathTo(pic.height() * pic.width());
-        int[] res = new int[pic.height()];
+        Iterable<DirectedEdge> pathTo = hSP.pathTo(len);
+        int[] res = new int[width()];
         int resCount = 0;
         for (DirectedEdge e : pathTo) {
             if (e.from() != 0)
@@ -100,23 +113,107 @@ public class SeamCarver {
         return res;
     }
 
-    // remove horizontal seam from current picture
+    // Sequence of indices for vertical seam
+    public int[] findVerticalSeam() {
+        Iterable<DirectedEdge> pathTo = vSP.pathTo(len);
+        int[] res = new int[height()];
+        int resCount = 0;
+        for (DirectedEdge e : pathTo) {
+            if (e.from() != 0)
+                res[resCount++] = e.from();
+        }
+        return res;
+    }
+
+    // Remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam) {
+        HashSet<Integer> seamPix = new HashSet<>(seam.length);
+        for (int i = 0; i < seam.length; i++)
+            seamPix.add(seam[i]);
 
+        Picture newPic = new Picture(width(), height() - 1);
+        for (int i = 0; i < newPic.height(); i++)
+            for (int j = 0; j < newPic.width(); j++)
+                if (!seamPix.contains(i * width() + j))
+                    newPic.set(j, i, pic.get(j, i));
+                else
+                    newPic.set(j, i, pic.get(j, i + 1));
+        pic = newPic;
     }
 
-    // remove vertical seam from current picture
+    // Remove vertical seam from current picture
     public void removeVerticalSeam(int[] seam) {
+        HashSet<Integer> seamPix = new HashSet<>(seam.length);
+        for (int i = 0; i < seam.length; i++)
+            seamPix.add(seam[i]);
 
+        Picture newPic = new Picture(width() - 1, height());
+        for (int i = 0; i < newPic.height(); i++)
+            for (int j = 0; j < newPic.width(); j++)
+                if (!seamPix.contains(i * width() + j))
+                    newPic.set(j, i, pic.get(j, i));
+                else
+                    newPic.set(j, i, pic.get(j + 1, i));
+        pic = newPic;
     }
 
-    // unit testing (optional)
+    // Unit testing (optional)
     public static void main(String[] args) {
         Picture testPic = new Picture(args[0]);
-        SeamCarver testSC = new SeamCarver(testPic);
-        for (int pix : testSC.findVerticalSeam()) {
-            System.out.println(pix);
-        }
-    }
+        StdPicture.read(args[0]);
+        StdPicture.show();
 
+        SeamCarver testSC = new SeamCarver(testPic);
+
+        // Remove 50 horizontal layers
+        for (int x = 0; x < 50; x++) {
+            testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
+
+            Picture newPic = testSC.picture();
+            for (int i = 0; i < StdPicture.height(); i++)
+                for (int j = 0; j < StdPicture.width(); j++) {
+                    if (i < newPic.height() && j < newPic.width()) {
+                        Color col = newPic.get(j, i);
+                        int r = StdPicture.getRed(j, i), g = StdPicture.getGreen(j, i), b = StdPicture.getBlue(j, i);
+                        if (col.getRed() != r || col.getGreen() != g || col.getBlue() != b)
+                            StdPicture.setRGB(j, i, 255, 0, 0);
+                    } else {
+                        int r = StdPicture.getRed(j, i), g = StdPicture.getGreen(j, i), b = StdPicture.getBlue(j, i);
+                        StdPicture.setRGB(j, i, r, g, b);
+                    }
+                }
+            StdPicture.show();
+            testSC = new SeamCarver(newPic);
+        }
+
+        // Remove 50 vertical layers
+        for (int x = 0; x < 50; x++) {
+            testSC.removeVerticalSeam(testSC.findVerticalSeam());
+            Picture newPic = testSC.picture();
+
+            for (int i = 0; i < StdPicture.height(); i++)
+                for (int j = 0; j < StdPicture.width(); j++) {
+                    if (i < newPic.height() && j < newPic.width()) {
+                        Color col = newPic.get(j, i);
+                        int r = StdPicture.getRed(j, i), g = StdPicture.getGreen(j, i), b = StdPicture.getBlue(j, i);
+                        if (col.getRed() != r || col.getGreen() != g || col.getBlue() != b)
+                            StdPicture.setRGB(j, i, 255, 0, 0);
+                    } else {
+                        int r = StdPicture.getRed(j, i), g = StdPicture.getGreen(j, i), b = StdPicture.getBlue(j, i);
+                        StdPicture.setRGB(j, i, r, g, b);
+                    }
+                }
+            StdPicture.show();
+            testSC = new SeamCarver(testSC.picture());
+        }
+
+        // Redraw
+        StdPicture.init(testSC.picture().width(), testSC.picture().height());
+        for (int i = 0; i < testSC.picture().height(); i++)
+            for (int j = 0; j < testSC.picture().width(); j++) {
+                Color col = testSC.picture().get(j, i);
+                StdPicture.setRGB(j, i, col.getRed(), col.getGreen(), col.getBlue());
+            }
+        StdPicture.show();
+    }
 }
