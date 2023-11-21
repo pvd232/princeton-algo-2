@@ -1,7 +1,5 @@
 package graph;
 
-import java.util.Iterator;
-
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdIn;
@@ -59,17 +57,12 @@ public class SAP {
     public int length(Iterable<Integer> v, Iterable<Integer> w) {
         if (v == null || w == null)
             throw new IllegalArgumentException();
-        Iterator<Integer> vIt = v.iterator(), wIt = w.iterator();
-        while (vIt.hasNext()) {
-            Integer vNext = vIt.next();
-            if (vNext == null || vNext >= g.V() || vNext < 0)
+        for (Integer vert : v)
+            if (vert == null || vert >= g.V() || vert < 0)
                 throw new IllegalArgumentException();
-        }
-        while (wIt.hasNext()) {
-            Integer wNext = wIt.next();
-            if (wNext == null || wNext >= g.V() || wNext < 0)
+        for (Integer vert : w)
+            if (vert == null || vert >= g.V() || vert < 0)
                 throw new IllegalArgumentException();
-        }
 
         DiBFSPaths bfsV = new DiBFSPaths(g, v), bfsW = new DiBFSPaths(g, w);
         return pathTo(bfsV, bfsW, false);
@@ -80,17 +73,12 @@ public class SAP {
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
         if (v == null || w == null)
             throw new IllegalArgumentException();
-        Iterator<Integer> vIt = v.iterator(), wIt = w.iterator();
-        while (vIt.hasNext()) {
-            Integer vNext = vIt.next();
-            if (vNext == null || vNext >= g.V() || vNext < 0)
+        for (Integer vert : v)
+            if (vert == null || vert >= g.V() || vert < 0)
                 throw new IllegalArgumentException();
-        }
-        while (wIt.hasNext()) {
-            Integer wNext = wIt.next();
-            if (wNext == null || wNext >= g.V() || wNext < 0)
+        for (Integer vert : w)
+            if (vert == null || vert >= g.V() || vert < 0)
                 throw new IllegalArgumentException();
-        }
 
         DiBFSPaths bfsV = new DiBFSPaths(g, v), bfsW = new DiBFSPaths(g, w);
         return pathTo(bfsV, bfsW, true);

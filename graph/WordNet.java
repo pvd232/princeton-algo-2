@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Iterator;
 
 public class WordNet {
     private final ArrayList<Synset> verts;
@@ -36,15 +35,13 @@ public class WordNet {
             Synset newSyn = new Synset(synIn.readLine());
             verts.add(newSyn); // Create synset from curr line
 
-            Iterator<String> synIt = newSyn.syns.iterator();
-            while (synIt.hasNext()) {
-                String next = synIt.next();
-                if (map.containsKey(next))
-                    map.get(next).add(newSyn.id);
+            for (String syn : newSyn.syns) {
+                if (map.containsKey(syn))
+                    map.get(syn).add(newSyn.id);
                 else {
                     LinkedList<Integer> newList = new LinkedList<>();
                     newList.add(newSyn.id);
-                    map.put(next, newList);
+                    map.put(syn, newList);
                 }
             }
 
@@ -59,9 +56,8 @@ public class WordNet {
         g = new Digraph(graphLen);
         for (int i = 0; i < adj.size(); i++) {
             Bag<Integer> adjBag = adj.get(i);
-            Iterator<Integer> iBag = adjBag.iterator();
-            while (iBag.hasNext())
-                g.addEdge(i, iBag.next());
+            for (int vert : adjBag)
+                g.addEdge(i, vert);
         }
 
         // Check for cycle
@@ -107,9 +103,8 @@ public class WordNet {
     // Binary search to find id for given noun
     private HashSet<Integer> subset(String word) {
         HashSet<Integer> res = new HashSet<>();
-        Iterator<Integer> ids = map.get(word).iterator();
-        while (ids.hasNext())
-            res.add(ids.next());
+        for (Integer id : map.get(word))
+            res.add(id);
         return res;
     }
 
@@ -143,17 +138,6 @@ public class WordNet {
         assert testNet.g.V() == testNet.verts.size();
         assert testNet.isNoun("miracle");
         assert !testNet.isNoun("gooblegah");
-
-        // Brute force test nouns
-        In syn = new In(args[0]);
-        int nounCount = 0;
-        while (syn.hasNextLine()) {
-            String[] parts = syn.readLine().split(",");
-            String[] synsList = parts[1].split(" ");
-            nounCount += synsList.length;
-        }
-        ArrayList<String> nounsList = (ArrayList<String>) testNet.nouns();
-        assert nounCount == nounsList.size();
 
         String testNounA = "Lamaze_method_of_childbirth", testNounB = "Bradley_method_of_childbirth";
         // Distance

@@ -1,7 +1,6 @@
 package graph;
 
 import java.util.ArrayDeque;
-import java.util.Iterator;
 import java.util.Queue;
 import edu.princeton.cs.algs4.Digraph;
 
@@ -39,9 +38,7 @@ public class DiBFSPaths {
 
     private void bfs(Digraph G, Iterable<Integer> s) {
         Queue<Integer> q = new ArrayDeque<Integer>();
-        Iterator<Integer> sIt = s.iterator();
-        while (sIt.hasNext()) {
-            int next = sIt.next();
+        for (Integer next : s) {
             q.add(next);
             marked[next] = true;
             distTo[next] = 0;
