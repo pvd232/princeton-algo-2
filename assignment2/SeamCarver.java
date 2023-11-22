@@ -1,11 +1,8 @@
-package graph;
-
 import edu.princeton.cs.algs4.Picture;
-import edu.princeton.cs.algs4.StdPicture;
+// import edu.princeton.cs.algs4.StdPicture;
 import edu.princeton.cs.algs4.DirectedEdge;
 import edu.princeton.cs.algs4.EdgeWeightedDigraph;
 import java.awt.Color;
-import java.util.ArrayList;
 
 public class SeamCarver {
     private Picture pic;
@@ -121,7 +118,9 @@ public class SeamCarver {
         int[] res = new int[height()];
         int resCount = 0;
         for (DirectedEdge e : pathTo) {
-            if (e.from() != 0)
+            if (e.from() == 0 && res[0] == 0)
+                res[resCount] = e.from();
+            else
                 res[resCount++] = e.from();
         }
         return res;
@@ -167,11 +166,8 @@ public class SeamCarver {
             for (int j = 0; j < newPic.width(); j++)
                 if (i < py && j < px)
                     newPic.set(j, i, pic.get(j, i));
-                else if (i == py && j == px)
-                    newPic.set(j, i, pic.get(j, i + 1));
                 else
-                    newPic.set(j, i, pic.get(j, i));
-
+                    newPic.set(j, i, pic.get(j, i + 1));
         }
         pic = newPic;
     }
@@ -184,14 +180,11 @@ public class SeamCarver {
         Picture newPic = new Picture(width() - 1, height());
         for (int i = 0; i < newPic.height(); i++) {
             int py = seam[i] / width(), px = seam[i] % width();
-            System.out.println(py);
             for (int j = 0; j < newPic.width(); j++)
                 if (i < py && j < px)
                     newPic.set(j, i, pic.get(j, i));
-                else if (i == py && j == px)
-                    newPic.set(j, i, pic.get(j + 1, i));
                 else
-                    newPic.set(j, i, pic.get(j, i));
+                    newPic.set(j, i, pic.get(j + 1, i));
         }
         pic = newPic;
     }
@@ -199,47 +192,17 @@ public class SeamCarver {
     // Unit testing (optional)
     public static void main(String[] args) {
         Picture testPic = new Picture(args[0]);
+
         SeamCarver testSC = new SeamCarver(testPic);
-        ArrayList<int[]> rmved = new ArrayList<>();
-
-        for (int i = 0; i < 10; i++) {
-            int[] rmSeam = testSC.findHorizontalSeam();
-            rmved.add(rmSeam);
-            testSC.removeHorizontalSeam(rmSeam);
-            testSC = new SeamCarver(testSC.picture());
+        for (int a : testSC.findVerticalSeam()) {
+            System.out.println(a);
         }
-        // StdPicture.init(testSC.picture().width(), testSC.picture().height());
-        // for (int i = 0; i < testSC.picture().height(); i++)
-        // for (int j = 0; j < testSC.picture().width(); j++)
-        // StdPicture.setRGB(j, i, testSC.picture().get(j, i).getRed(),
-        // testSC.picture().get(j, i).getGreen(),
-        // testSC.picture().get(j, i).getBlue());
-        // StdPicture.show();
-        for (int i = 0; i < 5; i++) {
-            int[] rmSeam = testSC.findVerticalSeam();
-            rmved.add(rmSeam);
-            testSC.removeVerticalSeam(rmSeam);
-            testSC = new SeamCarver(testSC.picture());
-        }
-
-        StdPicture.read(args[0]);
-        StdPicture.show();
-        for (int i = 0; i < rmved.size(); i++)
-            for (int j = 0; j < rmved.get(i).length; j++)
-                StdPicture.setRGB(rmved.get(i)[j] % testPic.width(), rmved.get(i)[j] /
-                        testPic.width(), 255, 0, 0);
-        // StdPicture.show();
-        // testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
-        // testSC.removeVerticalSeam(testSC.findVerticalSeam());
-        // for (int a : testSC.findVerticalSeam()) {
-        // System.out.println(a);
-        // }
-        // System.out.println();
+        System.out.println();
         // for (int a : testSC.findHorizontalSeam()) {
         // System.out.println(a);
         // }
-        // // Remove horizontal layers
-
+        // Remove horizontal layers
+        testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
         // StdPicture.init(testSC.picture().width(), testSC.picture().height());
         // for (int i = 0; i < testSC.picture().height(); i++)
         // for (int j = 0; j < testSC.picture().height(); j++)
