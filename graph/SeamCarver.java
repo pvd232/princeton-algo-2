@@ -1,37 +1,26 @@
 package graph;
 
 import edu.princeton.cs.algs4.Picture;
-import edu.princeton.cs.algs4.StdPicture;
 import edu.princeton.cs.algs4.DirectedEdge;
 import edu.princeton.cs.algs4.EdgeWeightedDigraph;
+
 import java.awt.Color;
-import java.util.ArrayList;
 
 public class SeamCarver {
     private Picture pic;
-    private final int len;
-    private final EdgeWeightedDigraph vEWG;
-    private final EdgeWeightedDigraph hEWG;
-    private final AcyclicSP vSP;
-    private final AcyclicSP hSP;
+    private int len;
 
     // Create a seam carver object based on the given picture
     public SeamCarver(Picture picture) {
         pic = new Picture(picture);
         len = width() * height();
-        vEWG = new EdgeWeightedDigraph(height() * width() + 1);
-        hEWG = new EdgeWeightedDigraph(height() * width() + 1);
-        createDAG(true, vEWG);
-        createDAG(false, hEWG);
-        vSP = new AcyclicSP(vEWG, 0);
-        hSP = new AcyclicSP(hEWG, 0);
     }
 
     private void createDAG(boolean vertical, EdgeWeightedDigraph dag) {
         // Populate digraph
         for (int i = 0; i < height(); i++)
             for (int j = 0; j < width(); j++)
-                connPixels(j, i, vertical, dag);
+                addEdges(j, i, vertical, dag);
 
         // Connect virtual top and virtual bottom
         if (vertical) {
@@ -48,14 +37,14 @@ public class SeamCarver {
 
     }
 
-    private void connPixels(int x, int y, boolean vertical, EdgeWeightedDigraph dag) {
+    private void addEdges(int x, int y, boolean vertical, EdgeWeightedDigraph dag) {
         // Skip virtual top and bottom
-        if (x == 0 && y == 0 || x == width() - 1 && y == height() - 1)
+        if (x == 0 && y == 0 || x == width() && y == height())
             return;
+
         int[] dir = new int[] { -1, 0, 1 };
         for (int d : dir) {
-            int adjX = x;
-            int adjY = y;
+            int adjX = x, adjY = y;
             if (vertical) {
                 adjX = adjX + d;
                 adjY = adjY + 1;
@@ -87,16 +76,16 @@ public class SeamCarver {
     public double energy(int x, int y) {
         if (x < 0 || x >= pic.width() || y < 0 || y >= pic.height())
             throw new IllegalArgumentException();
+
         if (x == 0 || x == width() - 1 || y == 0 || y == height() - 1)
             return 1000;
-        double xGrad = gradientSq(x + 1, y, x - 1, y);
-        double yGrad = gradientSq(x, y + 1, x, y - 1);
+
+        double xGrad = gradientSq(x + 1, y, x - 1, y), yGrad = gradientSq(x, y + 1, x, y - 1);
         return Math.sqrt(xGrad + yGrad);
     }
 
     private double gradientSq(int x1, int y1, int x2, int y2) {
-        Color c1 = pic.get(x1, y1);
-        Color c2 = pic.get(x2, y2);
+        Color c1 = pic.get(x1, y1), c2 = pic.get(x2, y2);
 
         double rD = Math.pow(c1.getRed() - c2.getRed(), 2), bD = Math.pow(c1.getBlue() - c2.getBlue(), 2),
                 gD = Math.pow(c1.getGreen() - c2.getGreen(), 2);
@@ -105,25 +94,32 @@ public class SeamCarver {
 
     // Sequence of indices for horizontal seam
     public int[] findHorizontalSeam() {
+        EdgeWeightedDigraph hEWG = new EdgeWeightedDigraph(height() * width() + 1);
+        createDAG(false, hEWG);
+
+        AcyclicSP hSP = new AcyclicSP(hEWG, 0);
+
         Iterable<DirectedEdge> pathTo = hSP.pathTo(len);
         int[] res = new int[width()];
         int resCount = 0;
-        for (DirectedEdge e : pathTo) {
+        for (DirectedEdge e : pathTo)
             if (e.from() != 0)
-                res[resCount++] = e.from();
-        }
+                res[resCount++] = e.from() / width();
         return res;
     }
 
     // Sequence of indices for vertical seam
     public int[] findVerticalSeam() {
+        EdgeWeightedDigraph vEWG = new EdgeWeightedDigraph(height() * width() + 1);
+        createDAG(true, vEWG);
+        AcyclicSP vSP = new AcyclicSP(vEWG, 0);
+
         Iterable<DirectedEdge> pathTo = vSP.pathTo(len);
         int[] res = new int[height()];
         int resCount = 0;
-        for (DirectedEdge e : pathTo) {
+        for (DirectedEdge e : pathTo)
             if (e.from() != 0)
-                res[resCount++] = e.from();
-        }
+                res[resCount++] = e.from() % width();
         return res;
     }
 
@@ -137,21 +133,15 @@ public class SeamCarver {
             return false;
 
         for (int i = 0; i < seam.length - 1; i++) {
-            int j = i + 1;
-            int res = seam[j] - seam[i];
-            if (vertical) {
-                if (res != width() && res != width() + 1 && res != width() - 1)
-                    return false;
-                if (!(seam[i] >= width() * i && seam[i] <= width() * (i + 1)))
-                    return false;
-            }
+            int cmp = seam[i + 1] - seam[i];
+            if (cmp > 1 || cmp < -1)
+                return false;
 
-            if (!vertical) {
-                if (res != 1 - width() && res != 1 && res != width() + 1)
-                    return false;
-                if (!(seam[i] % width() == i))
-                    return false;
-            }
+            if (vertical && seam[i] >= width())
+                return false;
+
+            if (!vertical && seam[i] >= height())
+                return false;
         }
         return true;
     }
@@ -162,18 +152,15 @@ public class SeamCarver {
             throw new IllegalArgumentException();
 
         Picture newPic = new Picture(width(), height() - 1);
-        for (int i = 0; i < newPic.height(); i++) {
-            int py = seam[i] / width(), px = seam[i] % width();
-            for (int j = 0; j < newPic.width(); j++)
-                if (i < py && j < px)
-                    newPic.set(j, i, pic.get(j, i));
-                else if (i == py && j == px)
-                    newPic.set(j, i, pic.get(j, i + 1));
+        for (int i = 0; i < newPic.width(); i++)
+            for (int j = 0; j < newPic.height(); j++) {
+                if (j < seam[i])
+                    newPic.set(i, j, pic.get(i, j));
                 else
-                    newPic.set(j, i, pic.get(j, i));
-
-        }
+                    newPic.set(i, j, pic.get(i, j + 1));
+            }
         pic = newPic;
+        len = newPic.width() * newPic.height();
     }
 
     // Remove vertical seam from current picture
@@ -183,69 +170,32 @@ public class SeamCarver {
 
         Picture newPic = new Picture(width() - 1, height());
         for (int i = 0; i < newPic.height(); i++) {
-            int py = seam[i] / width(), px = seam[i] % width();
-            System.out.println(py);
             for (int j = 0; j < newPic.width(); j++)
-                if (i < py && j < px)
+                if (j < seam[i])
                     newPic.set(j, i, pic.get(j, i));
-                else if (i == py && j == px)
-                    newPic.set(j, i, pic.get(j + 1, i));
                 else
-                    newPic.set(j, i, pic.get(j, i));
+                    newPic.set(j, i, pic.get(j + 1, i));
         }
         pic = newPic;
+        len = newPic.width() * newPic.height();
     }
 
     // Unit testing (optional)
     public static void main(String[] args) {
-        Picture testPic = new Picture(args[0]);
-        SeamCarver testSC = new SeamCarver(testPic);
-        ArrayList<int[]> rmved = new ArrayList<>();
+        SeamCarver testSC = new SeamCarver(new Picture(args[0]));
+        for (int i = 0; i < 10; i++) {
+            int[] rmSeam = testSC.findVerticalSeam();
+            Picture overlaid = SCUtility.seamOverlay(testSC.picture(), false, rmSeam);
+            testSC.removeVerticalSeam(rmSeam);
+            overlaid.show();
+        }
 
         for (int i = 0; i < 10; i++) {
             int[] rmSeam = testSC.findHorizontalSeam();
-            rmved.add(rmSeam);
+            Picture overlaid = SCUtility.seamOverlay(testSC.picture(), true, rmSeam);
             testSC.removeHorizontalSeam(rmSeam);
-            testSC = new SeamCarver(testSC.picture());
-        }
-        // StdPicture.init(testSC.picture().width(), testSC.picture().height());
-        // for (int i = 0; i < testSC.picture().height(); i++)
-        // for (int j = 0; j < testSC.picture().width(); j++)
-        // StdPicture.setRGB(j, i, testSC.picture().get(j, i).getRed(),
-        // testSC.picture().get(j, i).getGreen(),
-        // testSC.picture().get(j, i).getBlue());
-        // StdPicture.show();
-        for (int i = 0; i < 5; i++) {
-            int[] rmSeam = testSC.findVerticalSeam();
-            rmved.add(rmSeam);
-            testSC.removeVerticalSeam(rmSeam);
-            testSC = new SeamCarver(testSC.picture());
+            overlaid.show();
         }
 
-        StdPicture.read(args[0]);
-        StdPicture.show();
-        for (int i = 0; i < rmved.size(); i++)
-            for (int j = 0; j < rmved.get(i).length; j++)
-                StdPicture.setRGB(rmved.get(i)[j] % testPic.width(), rmved.get(i)[j] /
-                        testPic.width(), 255, 0, 0);
-        // StdPicture.show();
-        // testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
-        // testSC.removeVerticalSeam(testSC.findVerticalSeam());
-        // for (int a : testSC.findVerticalSeam()) {
-        // System.out.println(a);
-        // }
-        // System.out.println();
-        // for (int a : testSC.findHorizontalSeam()) {
-        // System.out.println(a);
-        // }
-        // // Remove horizontal layers
-
-        // StdPicture.init(testSC.picture().width(), testSC.picture().height());
-        // for (int i = 0; i < testSC.picture().height(); i++)
-        // for (int j = 0; j < testSC.picture().height(); j++)
-        // StdPicture.setRGB(j, i, testSC.picture().get(j, i).getRed(),
-        // testSC.picture().get(j, i).getBlue(),
-        // testSC.picture().get(j, i).getBlue());
-        // StdPicture.show();
     }
 }
