@@ -1,15 +1,15 @@
-package graph;
+package ewg;
 
 import edu.princeton.cs.algs4.EdgeWeightedDigraph;
 import edu.princeton.cs.algs4.DirectedEdge;
 import edu.princeton.cs.algs4.Topological;
 import edu.princeton.cs.algs4.Stack;
 
-public class AcyclicSP {
+public class AcyclicSPX {
     private DirectedEdge[] edgeTo;
     private double[] distTo;
 
-    public AcyclicSP(EdgeWeightedDigraph G, int s) {
+    public AcyclicSPX(EdgeWeightedDigraph G, int s) {
         edgeTo = new DirectedEdge[G.V()];
         distTo = new double[G.V()];
         for (int v = 0; v < G.V(); v++)

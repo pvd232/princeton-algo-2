@@ -1,19 +1,19 @@
+package ewg;
+
 import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.DirectedEdge;
 import edu.princeton.cs.algs4.EdgeWeightedDigraph;
 
-public class SeamCarver {
+public class SeamCarverX {
     private Picture pic;
     private int len;
-    private int[][] colors;
 
     // Create a seam carver object based on the given picture
-    public SeamCarver(Picture picture) {
+    public SeamCarverX(Picture picture) {
         if (picture == null)
             throw new IllegalArgumentException();
         pic = new Picture(picture);
         len = width() * height();
-        colors = new int[height()][width()];
     }
 
     private void createDAG(boolean vertical, EdgeWeightedDigraph dag) {
@@ -85,16 +85,7 @@ public class SeamCarver {
     }
 
     private double gradientSq(int x1, int y1, int x2, int y2) {
-        int c1 = colors[y1][x1], c2 = colors[y2][x2];
-        if (c1 == 0) { // If no cached value, update
-            c1 = pic.getRGB(x1, y1);
-            colors[y1][x1] = c1;
-        }
-        if (c2 == 0) {
-            c2 = pic.getRGB(x2, y2);
-            colors[y2][x2] = c2;
-        }
-        // bit shift to extract RGB values from binary encoding of the int RGB value
+        int c1 = pic.getRGB(x1, y1), c2 = pic.getRGB(x2, y2);
         int r1 = (c1 >> 16) & 0xff, g1 = (c1 >> 8) & 0xff, b1 = c1 & 0xff;
         int r2 = (c2 >> 16) & 0xff, g2 = (c2 >> 8) & 0xff, b2 = c2 & 0xff;
         double rD = Math.pow(r1 - r2, 2), bD = Math.pow(b1 - b2, 2), gD = Math.pow(g1 - g2, 2);
@@ -148,7 +139,7 @@ public class SeamCarver {
             if (vertical && seam[i] >= width())
                 return false;
 
-            else if (!vertical && seam[i] >= height())
+            if (!vertical && seam[i] >= height())
                 return false;
 
             if (seam.length - i > 1) {
@@ -170,11 +161,8 @@ public class SeamCarver {
             for (int j = 0; j < newPic.height(); j++) {
                 if (j < seam[i])
                     newPic.set(i, j, pic.get(i, j));
-                else {
+                else
                     newPic.set(i, j, pic.get(i, j + 1));
-                    colors[j][i] = colors[j + 1][i];
-                }
-
             }
         pic = newPic;
         len = newPic.width() * newPic.height();
@@ -190,10 +178,8 @@ public class SeamCarver {
             for (int j = 0; j < newPic.width(); j++)
                 if (j < seam[i])
                     newPic.set(j, i, pic.get(j, i));
-                else {
+                else
                     newPic.set(j, i, pic.get(j + 1, i));
-                    colors[i][j] = colors[i][j + 1];
-                }
         }
         pic = newPic;
         len = newPic.width() * newPic.height();
@@ -201,7 +187,7 @@ public class SeamCarver {
 
     // Unit testing (optional)
     public static void main(String[] args) {
-        SeamCarver testSC = new SeamCarver(new Picture(args[0]));
+        SeamCarverX testSC = new SeamCarverX(new Picture(args[0]));
         for (int i = 0; i < 10; i++) {
             int[] rmSeam = testSC.findVerticalSeam();
             Picture overlaid = SCUtility.seamOverlay(testSC.picture(), false, rmSeam);
