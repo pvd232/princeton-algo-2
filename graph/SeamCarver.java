@@ -4,14 +4,14 @@ import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.DirectedEdge;
 import edu.princeton.cs.algs4.EdgeWeightedDigraph;
 
-import java.awt.Color;
-
 public class SeamCarver {
     private Picture pic;
     private int len;
 
     // Create a seam carver object based on the given picture
     public SeamCarver(Picture picture) {
+        if (picture == null)
+            throw new IllegalArgumentException();
         pic = new Picture(picture);
         len = width() * height();
     }
@@ -42,7 +42,7 @@ public class SeamCarver {
         if (x == 0 && y == 0 || x == width() && y == height())
             return;
 
-        int[] dir = new int[] { -1, 0, 1 };
+        int[] dir = { -1, 0, 1 };
         for (int d : dir) {
             int adjX = x, adjY = y;
             if (vertical) {
@@ -59,7 +59,7 @@ public class SeamCarver {
 
     // Current picture
     public Picture picture() {
-        return pic;
+        return new Picture(pic);
     }
 
     // Width of current picture
@@ -74,7 +74,7 @@ public class SeamCarver {
 
     // Energy of pixel at column x and row y
     public double energy(int x, int y) {
-        if (x < 0 || x >= pic.width() || y < 0 || y >= pic.height())
+        if (x < 0 || x >= width() || y < 0 || y >= height())
             throw new IllegalArgumentException();
 
         if (x == 0 || x == width() - 1 || y == 0 || y == height() - 1)
@@ -85,10 +85,10 @@ public class SeamCarver {
     }
 
     private double gradientSq(int x1, int y1, int x2, int y2) {
-        Color c1 = pic.get(x1, y1), c2 = pic.get(x2, y2);
-
-        double rD = Math.pow(c1.getRed() - c2.getRed(), 2), bD = Math.pow(c1.getBlue() - c2.getBlue(), 2),
-                gD = Math.pow(c1.getGreen() - c2.getGreen(), 2);
+        int c1 = pic.getRGB(x1, y1), c2 = pic.getRGB(x2, y2);
+        int r1 = (c1 >> 16) & 0xff, g1 = (c1 >> 8) & 0xff, b1 = c1 & 0xff;
+        int r2 = (c2 >> 16) & 0xff, g2 = (c2 >> 8) & 0xff, b2 = c2 & 0xff;
+        double rD = Math.pow(r1 - r2, 2), bD = Math.pow(b1 - b2, 2), gD = Math.pow(g1 - g2, 2);
         return rD + gD + bD;
     }
 
@@ -126,15 +126,14 @@ public class SeamCarver {
     private boolean validateSeam(int[] seam, boolean vertical) {
         if (seam == null)
             return false;
-        if (vertical && (height() == 1 || seam.length != pic.height()))
+        if (vertical && (width() == 1 || seam.length != height()))
             return false;
 
-        if (!vertical && (width() == 1 || seam.length != pic.width()))
+        if (!vertical && (height() == 1 || seam.length != width()))
             return false;
 
-        for (int i = 0; i < seam.length - 1; i++) {
-            int cmp = seam[i + 1] - seam[i];
-            if (cmp > 1 || cmp < -1)
+        for (int i = 0; i < seam.length; i++) {
+            if (seam[i] < 0)
                 return false;
 
             if (vertical && seam[i] >= width())
@@ -142,6 +141,12 @@ public class SeamCarver {
 
             if (!vertical && seam[i] >= height())
                 return false;
+
+            if (seam.length - i > 1) {
+                int cmp = seam[i + 1] - seam[i];
+                if (cmp > 1 || cmp < -1)
+                    return false;
+            }
         }
         return true;
     }
