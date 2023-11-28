@@ -99,11 +99,10 @@ public class BaseballElimination {
                 return true;
 
         FlowNetwork f = network(team);
-        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams());
+        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams() + 1);
         for (int i = 1; i < f.V(); i++)
             if (ff.inCut(i))
                 return true;
-
         return false;
     }
 
@@ -131,45 +130,34 @@ public class BaseballElimination {
                 return res;
             }
         FlowNetwork f = network(team);
-        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams());
+        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams() + 1);
         for (int i = 0; i < f.V(); i++)
             for (FlowEdge fE : f.adj(i))
-                if (fE.from() != 0 && ff.inCut(fE.to()))
-                    if (fE.to() > teams.get(team))
-                        res.add(teamNames[fE.to() - 1 - getMatches(numberOfTeams())]);
-                    else
-                        res.add(teamNames[fE.to() - getMatches(numberOfTeams())]);
+                if (ff.inCut(fE.to()) && fE.from() != 0)
+                    res.add(teamNames[fE.to() - getMatches(numberOfTeams()) - 1]);
         return res;
     }
 
     private FlowNetwork network(String team) {
         int bracket = getMatches(numberOfTeams());
-        int teamIdx = teams.get(team), tIdx = bracket + numberOfTeams();
+        int teamIdx = teams.get(team), tIdx = bracket + numberOfTeams() + 1;
         FlowNetwork fN = new FlowNetwork(tIdx + 1);
 
-        int addedS = 0, addedT = 0, wins = w[teamIdx], remain = r[teamIdx];
+        int added = 0, wins = w[teamIdx], remain = r[teamIdx];
         for (int i = 0; i < numberOfTeams(); i++) {
-            if (i != teamIdx) {
-                for (int j = 0; j < numberOfTeams(); j++) {
-                    if (j != teamIdx && j > i) {
-                        FlowEdge s = new FlowEdge(0, ++addedS, games[i][j]);
-                        fN.addEdge(s);
+            for (int j = 0; j < numberOfTeams(); j++) {
+                if (i != teamIdx && j != teamIdx && j > i) {
+                    FlowEdge s = new FlowEdge(0, ++added, games[i][j]);
+                    fN.addEdge(s);
 
-                        int e1Idx = bracket + i + 1, e2Idx = bracket + j + 1;
-                        if (e1Idx == tIdx)
-                            e1Idx = e1Idx - 1;
-                        if (e2Idx == tIdx)
-                            e2Idx = e2Idx - 1;
-
-                        FlowEdge e1 = new FlowEdge(addedS, e1Idx, Double.POSITIVE_INFINITY),
-                                e2 = new FlowEdge(addedS, e2Idx, Double.POSITIVE_INFINITY);
-                        fN.addEdge(e1);
-                        fN.addEdge(e2);
-                    }
+                    FlowEdge e1 = new FlowEdge(added, bracket + i + 1, Double.POSITIVE_INFINITY),
+                            e2 = new FlowEdge(added, bracket + j + 1, Double.POSITIVE_INFINITY);
+                    fN.addEdge(e1);
+                    fN.addEdge(e2);
                 }
-                FlowEdge t = new FlowEdge(++addedT + bracket, tIdx, wins + remain - w[i]);
-                fN.addEdge(t);
             }
+            FlowEdge t = new FlowEdge(bracket + i + 1, tIdx, wins + remain - w[i]);
+            fN.addEdge(t);
         }
         return fN;
     }

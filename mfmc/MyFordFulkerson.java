@@ -13,10 +13,11 @@ public class MyFordFulkerson {
         value = 0.0;
         while (hasAugmentingPath(G, s, t)) {
             double bottle = Double.POSITIVE_INFINITY;
-            for (int v = t; v != s; v = edgeTo[v].other(v))
-                // Compute bottleneck capacity
+            for (int v = t; v != s; v = edgeTo[v].other(v)) // Compute bottleneck capacity
+
                 bottle = Math.min(bottle, edgeTo[v].residualCapacityTo(v));
-            for (int v = t; v != s; v = edgeTo[v].other(v))
+            for (int v = t; v != s; v = edgeTo[v].other(v)) // Augment flow
+
                 edgeTo[v].addResidualFlowTo(v, bottle);
             value += bottle;
         }
