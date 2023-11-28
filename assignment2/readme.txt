@@ -6,7 +6,16 @@
  *  seam.
  **************************************************************************** */
 
+    My SeamCarver class has 2 different DS and algorithmic implementations. 
 
+    The first implementation uses explicit Graph data structures, including an EdgeWeightedDigraph, and DirectedEdges
+    It uses a dynamic, topologocial sort based algorithm that relaxes each vertex to find the shortest path.
+
+    The second impementation relies upon implicit graph data structures, using 2 vertex-indexed arrays.
+    One array tracks the the single source vertex distance, the other tracks the path taken to get to that source.
+    The shortest path algorithm is similar to the dynamic, topological sort based algorithm, except that the vertices
+    are not sorted topologically, but rather are considered in the order they occur in the image, traversed either 
+    left to right, or top to bottom. Each vertex is relaxed.
 
 /* *****************************************************************************
  *  Describe what makes an image suitable to the seam-carving approach
@@ -14,7 +23,8 @@
  *  image, without introducing visual artifacts). Describe an image that
  *  would not work well.
  **************************************************************************** */
-
+    Images with orthogonal edges preserve the aspect ratio of the image when resizing via removing coplanar cuts.
+    Also, images with high levels of gradience / prominent backgrounds.
 
 
 /* *****************************************************************************

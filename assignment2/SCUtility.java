@@ -30,7 +30,7 @@ public class SCUtility {
     }
 
     // convert SeamCarver picture to width-by-height energy matrix
-    public static double[][] toEnergyMatrix(SeamCarverX sc) {
+    public static double[][] toEnergyMatrix(SeamCarver sc) {
         double[][] a = new double[sc.width()][sc.height()];
         for (int col = 0; col < sc.width(); col++)
             for (int row = 0; row < sc.height(); row++)
@@ -39,12 +39,12 @@ public class SCUtility {
     }
 
     // displays grayscale values as energy (converts to picture, calls show)
-    public static void showEnergy(SeamCarverX sc) {
+    public static void showEnergy(SeamCarver sc) {
         doubleToPicture(toEnergyMatrix(sc)).show();
     }
 
     // returns picture of energy matrix associated with SeamCarver picture
-    public static Picture toEnergyPicture(SeamCarverX sc) {
+    public static Picture toEnergyPicture(SeamCarver sc) {
         double[][] energyMatrix = toEnergyMatrix(sc);
         return doubleToPicture(energyMatrix);
     }

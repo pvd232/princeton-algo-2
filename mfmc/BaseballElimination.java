@@ -1,0 +1,191 @@
+package mfmc;
+
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.FordFulkerson;
+import edu.princeton.cs.algs4.FlowNetwork;
+import edu.princeton.cs.algs4.FlowEdge;
+
+import java.util.HashMap;
+import java.util.HashSet;
+
+public class BaseballElimination {
+    private final HashMap<String, Integer> teams;
+    private final String[] teamNames;
+    private final int[] w;
+    private final int[] losses;
+    private final int[] r;
+    private final int[][] games;
+
+    // Create a baseball division from given filename in format specified below
+    public BaseballElimination(String filename) {
+        In in = new In(filename);
+        int n = Integer.parseInt(in.readLine());
+        w = new int[n];
+        losses = new int[n];
+        r = new int[n];
+        games = new int[n][n];
+        teams = new HashMap<>();
+        teamNames = new String[n];
+        int i = 0;
+        while (i < n) {
+            String team = in.readString().strip();
+            teamNames[i] = team;
+            teams.put(team, i);
+
+            int win = in.readInt(), loss = in.readInt(), remain = in.readInt();
+
+            w[i] = win;
+            losses[i] = loss;
+            r[i] = remain;
+
+            games[i] = new int[n];
+            for (int s = 0; s < n; s++)
+                games[i][s] = in.readInt();
+            i++;
+        }
+    }
+
+    // Number of teams
+    public int numberOfTeams() {
+        return teams.size();
+    }
+
+    // All teams
+    public Iterable<String> teams() {
+        return teams.keySet();
+    }
+
+    // Number of wins for given team
+    public int wins(String team) {
+        if (!teams.containsKey(team))
+            throw new IllegalArgumentException();
+
+        return w[teams.get(team)];
+    }
+
+    // Number of losses for given team
+    public int losses(String team) {
+        if (!teams.containsKey(team))
+            throw new IllegalArgumentException();
+
+        return losses[teams.get(team)];
+    }
+
+    // Number of remaining games for given team
+    public int remaining(String team) {
+        if (!teams.containsKey(team))
+            throw new IllegalArgumentException();
+
+        return r[teams.get(team)];
+    }
+
+    // Number of remaining games between team1 and team2
+    public int against(String team1, String team2) {
+        if (!teams.containsKey(team1) || !teams.containsKey(team2))
+            throw new IllegalArgumentException();
+
+        return games[teams.get(team1)][teams.get(team2)];
+    }
+
+    // Is given team eliminated?
+    public boolean isEliminated(String team) {
+        if (!teams.containsKey(team))
+            throw new IllegalArgumentException();
+
+        int wins = w[teams.get(team)] + r[teams.get(team)];
+        for (int win : w)
+            if (wins < win)
+                return true;
+
+        FlowNetwork f = network(team);
+        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams());
+        for (int i = 1; i < f.V(); i++)
+            if (ff.inCut(i))
+                return true;
+
+        return false;
+    }
+
+    private int getMatches(int n) {
+        int res = 0;
+        for (int i = n - 2; i > 0; i--)
+            res += i;
+        return res;
+    }
+
+    // Subset R of teams that eliminates given team; null if not eliminated
+    public Iterable<String> certificateOfElimination(String team) {
+        if (!teams.containsKey(team))
+            throw new IllegalArgumentException();
+
+        if (!isEliminated(team))
+            return null;
+
+        HashSet<String> res = new HashSet<>();
+
+        int wins = w[teams.get(team)] + r[teams.get(team)];
+        for (int i = 0; i < w.length; i++)
+            if (w[i] > wins) {
+                res.add(teamNames[i]);
+                return res;
+            }
+        FlowNetwork f = network(team);
+        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams());
+        for (int i = 0; i < f.V(); i++)
+            for (FlowEdge fE : f.adj(i))
+                if (fE.from() != 0 && ff.inCut(fE.to()))
+                    if (fE.to() > teams.get(team))
+                        res.add(teamNames[fE.to() - 1 - getMatches(numberOfTeams())]);
+                    else
+                        res.add(teamNames[fE.to() - getMatches(numberOfTeams())]);
+        return res;
+    }
+
+    private FlowNetwork network(String team) {
+        int bracket = getMatches(numberOfTeams());
+        int teamIdx = teams.get(team), tIdx = bracket + numberOfTeams();
+        FlowNetwork fN = new FlowNetwork(tIdx + 1);
+
+        int addedS = 0, addedT = 0, wins = w[teamIdx], remain = r[teamIdx];
+        for (int i = 0; i < numberOfTeams(); i++) {
+            if (i != teamIdx) {
+                for (int j = 0; j < numberOfTeams(); j++) {
+                    if (j != teamIdx && j > i) {
+                        FlowEdge s = new FlowEdge(0, ++addedS, games[i][j]);
+                        fN.addEdge(s);
+
+                        int e1Idx = bracket + i + 1, e2Idx = bracket + j + 1;
+                        if (e1Idx == tIdx)
+                            e1Idx = e1Idx - 1;
+                        if (e2Idx == tIdx)
+                            e2Idx = e2Idx - 1;
+
+                        FlowEdge e1 = new FlowEdge(addedS, e1Idx, Double.POSITIVE_INFINITY),
+                                e2 = new FlowEdge(addedS, e2Idx, Double.POSITIVE_INFINITY);
+                        fN.addEdge(e1);
+                        fN.addEdge(e2);
+                    }
+                }
+                FlowEdge t = new FlowEdge(++addedT + bracket, tIdx, wins + remain - w[i]);
+                fN.addEdge(t);
+            }
+        }
+        return fN;
+    }
+
+    public static void main(String[] args) {
+        BaseballElimination division = new BaseballElimination(args[0]);
+        for (String team : division.teams()) {
+            if (division.isEliminated(team)) {
+                StdOut.print(team + " is eliminated by the subset R = { ");
+                for (String t : division.certificateOfElimination(team)) {
+                    StdOut.print(t + " ");
+                }
+                StdOut.println("}");
+            } else {
+                StdOut.println(team + " is not eliminated");
+            }
+        }
+    }
+}

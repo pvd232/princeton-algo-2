@@ -1,60 +1,17 @@
 import edu.princeton.cs.algs4.Picture;
-import edu.princeton.cs.algs4.DirectedEdge;
-import edu.princeton.cs.algs4.EdgeWeightedDigraph;
+
+import java.util.ArrayList;
 
 public class SeamCarver {
     private Picture pic;
-    private int len;
-    private int[][] colors;
+    private final int[][] colors;
 
     // Create a seam carver object based on the given picture
     public SeamCarver(Picture picture) {
         if (picture == null)
             throw new IllegalArgumentException();
         pic = new Picture(picture);
-        len = width() * height();
         colors = new int[height()][width()];
-    }
-
-    private void createDAG(boolean vertical, EdgeWeightedDigraph dag) {
-        // Populate digraph
-        for (int i = 0; i < height(); i++)
-            for (int j = 0; j < width(); j++)
-                addEdges(j, i, vertical, dag);
-
-        // Connect virtual top and virtual bottom
-        if (vertical) {
-            for (int i = 1; i < width(); i++) // Conn vTop to row 0
-                dag.addEdge(new DirectedEdge(0, i, 1000));
-            for (int i = (height() - 1) * width(); i < len; i++) // Conn vBottom to row height - 1
-                dag.addEdge(new DirectedEdge(i, len, 1000));
-        } else {
-            for (int i = 1; i < height(); i++) // Conn vTop to col 0
-                dag.addEdge(new DirectedEdge(0, i * width(), 1000));
-            for (int i = 1; i < height(); i++) // Conn vBottom to col width - 1
-                dag.addEdge(new DirectedEdge(i * width() - 1, len, 1000));
-        }
-
-    }
-
-    private void addEdges(int x, int y, boolean vertical, EdgeWeightedDigraph dag) {
-        // Skip virtual top and bottom
-        if (x == 0 && y == 0 || x == width() && y == height())
-            return;
-
-        int[] dir = { -1, 0, 1 };
-        for (int d : dir) {
-            int adjX = x, adjY = y;
-            if (vertical) {
-                adjX = adjX + d;
-                adjY = adjY + 1;
-            } else {
-                adjY = adjY + d;
-                adjX = adjX + 1;
-            }
-            if (adjX >= 0 && adjX < width() && adjY >= 0 && adjY < height())
-                dag.addEdge(new DirectedEdge(x + y * width(), adjX + adjY * width(), energy(adjX, adjY)));
-        }
     }
 
     // Current picture
@@ -103,32 +60,98 @@ public class SeamCarver {
 
     // Sequence of indices for horizontal seam
     public int[] findHorizontalSeam() {
-        EdgeWeightedDigraph hEWG = new EdgeWeightedDigraph(height() * width() + 1);
-        createDAG(false, hEWG);
-
-        AcyclicSP hSP = new AcyclicSP(hEWG, 0);
-
-        Iterable<DirectedEdge> pathTo = hSP.pathTo(len);
-        int[] res = new int[width()];
-        int resCount = 0;
-        for (DirectedEdge e : pathTo)
-            if (e.from() != 0)
-                res[resCount++] = e.from() / width();
-        return res;
+        return sp(false);
     }
 
     // Sequence of indices for vertical seam
     public int[] findVerticalSeam() {
-        EdgeWeightedDigraph vEWG = new EdgeWeightedDigraph(height() * width() + 1);
-        createDAG(true, vEWG);
-        AcyclicSP vSP = new AcyclicSP(vEWG, 0);
+        return sp(true);
+    }
 
-        Iterable<DirectedEdge> pathTo = vSP.pathTo(len);
-        int[] res = new int[height()];
-        int resCount = 0;
-        for (DirectedEdge e : pathTo)
-            if (e.from() != 0)
-                res[resCount++] = e.from() % width();
+    private int[] pathTo(int v, int[] edgeTo, int bound, boolean vertical) {
+        int[] res = new int[bound];
+        int e = edgeTo[v];
+        for (int i = 0; i < bound; i++) {
+            if (vertical)
+                res[bound - i - 1] = e % width();
+            else
+                res[bound - i - 1] = e / width();
+            e = edgeTo[e];
+        }
+        return res;
+    }
+
+    private int[] sp(boolean vertical) {
+        if (vertical) {
+            int[] edgeTo = new int[height() * width() + 1];
+            double[] distTo = new double[height() * width() + 1];
+
+            for (int k = 0; k < width(); k++) {
+                distTo[k] = 1000;
+                edgeTo[k] = k;
+            }
+
+            for (int i = 0; i < height(); i++)
+                for (int j = 0; j < width(); j++)
+                    if (i == height() - 1)
+                        relax(j, i, 0, i + 1, distTo, edgeTo);
+                    else
+                        for (int r : adj(j, i, vertical))
+                            relax(j, i, r, i + 1, distTo, edgeTo);
+
+            return pathTo(height() * width(), edgeTo, height(), vertical);
+        } else {
+            int[] edgeTo = new int[width() * height() + 1];
+            double[] distTo = new double[width() * height() + 1];
+
+            for (int k = 0; k < height(); k++) {
+                distTo[k * width()] = 1000;
+                edgeTo[k * width()] = k * width();
+            }
+
+            for (int i = 0; i < width(); i++)
+                for (int j = 0; j < height(); j++)
+                    if (i == width() - 1)
+                        relax(i, j, 0, height(), distTo, edgeTo);
+                    else
+                        for (int r : adj(i, j, vertical))
+                            relax(i, j, i + 1, r, distTo, edgeTo);
+
+            return pathTo(height() * width(), edgeTo, width(), vertical);
+        }
+    }
+
+    private void relax(int x1, int y1, int x2, int y2, double[] distTo, int[] edgeTo) {
+        double weight;
+        if (x1 == width() - 1 || y1 == height() - 1)
+            weight = 1000;
+        else
+            weight = energy(x2, y2);
+        int v = y1 * width() + x1, w = y2 * width() + x2;
+        if (distTo[w] == 0 || distTo[w] > distTo[v] + weight) {
+            distTo[w] = distTo[v] + weight;
+            edgeTo[w] = v;
+        }
+    }
+
+    private Iterable<Integer> adj(int x, int y, boolean vertical) {
+        int[] dir = { -1, 0, 1 };
+        ArrayList<Integer> res = new ArrayList<>();
+        for (int d : dir) {
+            int adjX = x, adjY = y;
+            if (vertical) {
+                adjX = adjX + d;
+                adjY = adjY + 1;
+            } else {
+                adjY = adjY + d;
+                adjX = adjX + 1;
+            }
+            if (adjX >= 0 && adjX < width() && adjY >= 0 && adjY < height())
+                if (vertical)
+                    res.add(adjX);
+                else
+                    res.add(adjY);
+        }
         return res;
     }
 
@@ -144,13 +167,10 @@ public class SeamCarver {
         for (int i = 0; i < seam.length; i++) {
             if (seam[i] < 0)
                 return false;
-
             if (vertical && seam[i] >= width())
                 return false;
-
             else if (!vertical && seam[i] >= height())
                 return false;
-
             if (seam.length - i > 1) {
                 int cmp = seam[i + 1] - seam[i];
                 if (cmp > 1 || cmp < -1)
@@ -174,10 +194,8 @@ public class SeamCarver {
                     newPic.set(i, j, pic.get(i, j + 1));
                     colors[j][i] = colors[j + 1][i];
                 }
-
             }
         pic = newPic;
-        len = newPic.width() * newPic.height();
     }
 
     // Remove vertical seam from current picture
@@ -196,25 +214,23 @@ public class SeamCarver {
                 }
         }
         pic = newPic;
-        len = newPic.width() * newPic.height();
     }
 
     // Unit testing (optional)
     public static void main(String[] args) {
         SeamCarver testSC = new SeamCarver(new Picture(args[0]));
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 500; i++) {
             int[] rmSeam = testSC.findVerticalSeam();
             Picture overlaid = SCUtility.seamOverlay(testSC.picture(), false, rmSeam);
             testSC.removeVerticalSeam(rmSeam);
             overlaid.show();
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 500; i++) {
             int[] rmSeam = testSC.findHorizontalSeam();
             Picture overlaid = SCUtility.seamOverlay(testSC.picture(), true, rmSeam);
             testSC.removeHorizontalSeam(rmSeam);
             overlaid.show();
         }
-
     }
 }
