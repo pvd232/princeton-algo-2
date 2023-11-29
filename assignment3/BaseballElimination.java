@@ -97,18 +97,23 @@ public class BaseballElimination {
                 return true;
 
         FlowNetwork f = network(team);
-        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams() + 1);
+        FordFulkerson ff = new FordFulkerson(f, 0, netLen() - 1);
+
         for (int i = 1; i < f.V(); i++)
             if (ff.inCut(i))
                 return true;
         return false;
     }
 
-    private int getMatches(int n) {
+    private int matches(int n) {
         int res = 0;
         for (int i = n - 2; i > 0; i--)
             res += i;
         return res;
+    }
+
+    private int netLen() {
+        return numberOfTeams() + matches(numberOfTeams()) + 2;
     }
 
     // Subset R of teams that eliminates given team; null if not eliminated
@@ -127,20 +132,19 @@ public class BaseballElimination {
                 res.add(teamNames[i]);
                 return res;
             }
-
         FlowNetwork f = network(team);
-        FordFulkerson ff = new FordFulkerson(f, 0, getMatches(numberOfTeams()) + numberOfTeams() + 1);
+        FordFulkerson ff = new FordFulkerson(f, 0, netLen() - 1);
         for (int i = 0; i < f.V(); i++)
             for (FlowEdge fE : f.adj(i))
                 if (ff.inCut(fE.to()) && fE.from() != 0)
-                    res.add(teamNames[fE.to() - getMatches(numberOfTeams()) - 1]);
+                    res.add(teamNames[fE.to() - matches(numberOfTeams()) - 1]);
         return res;
     }
 
     private FlowNetwork network(String team) {
-        int bracket = getMatches(numberOfTeams());
-        int teamIdx = teams.get(team), tIdx = bracket + numberOfTeams() + 1;
-        FlowNetwork fN = new FlowNetwork(tIdx + 1);
+        FlowNetwork fN = new FlowNetwork(netLen());
+        int bracket = matches(numberOfTeams());
+        int teamIdx = teams.get(team), tIdx = netLen() - 1;
 
         int added = 0, wins = w[teamIdx], remain = r[teamIdx];
         for (int i = 0; i < numberOfTeams(); i++) {
@@ -158,6 +162,29 @@ public class BaseballElimination {
             FlowEdge t = new FlowEdge(bracket + i + 1, tIdx, wins + remain - w[i]);
             fN.addEdge(t);
         }
+        int sCount = 0;
+        int gamesCount = 0;
+        int tCount = 0;
+        int toTCount = 0;
+        for (FlowEdge fe : fN.edges()) {
+            if (fe.from() == 0)
+                sCount++;
+            else if (fe.from() <= bracket && fe.from() > 0) {
+                gamesCount++;
+                assert fe.capacity() == Double.POSITIVE_INFINITY;
+            } else if (fe.from() > bracket) {
+                tCount++;
+            }
+            if (fe.to() == tIdx) {
+                toTCount++;
+            }
+        }
+        assert sCount == bracket; // Games pointing from s should equal bracket
+        assert gamesCount == 2 * bracket; // 2 edges pointing from each game
+
+        assert tCount == numberOfTeams(); // N-1 verts pointing to t
+
+        assert tCount == toTCount; // Should be the same
         return fN;
     }
 
