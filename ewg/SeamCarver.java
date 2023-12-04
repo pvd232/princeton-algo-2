@@ -215,20 +215,20 @@ public class SeamCarver {
 
     // Unit testing (optional)
     public static void main(String[] args) {
-        // SeamCarver testSC = new SeamCarver(new Picture(args[0]));
-        // for (int i = 0; i < 50; i++) {
-        // int[] rmSeam = testSC.findVerticalSeam();
-        // Picture overlaid = SCUtility.seamOverlay(testSC.picture(), false, rmSeam);
-        // testSC.removeVerticalSeam(rmSeam);
-        // overlaid.show();
-        // }
+        SeamCarver testSC = new SeamCarver(new Picture(args[0]));
+        for (int i = 0; i < 50; i++) {
+            int[] rmSeam = testSC.findVerticalSeam();
+            Picture overlaid = SCUtility.seamOverlay(testSC.picture(), false, rmSeam);
+            testSC.removeVerticalSeam(rmSeam);
+            overlaid.show();
+        }
 
-        // for (int i = 0; i < 50; i++) {
-        // int[] rmSeam = testSC.findHorizontalSeam();
-        // Picture overlaid = SCUtility.seamOverlay(testSC.picture(), true, rmSeam);
-        // testSC.removeHorizontalSeam(rmSeam);
-        // overlaid.show();
-        // }
+        for (int i = 0; i < 50; i++) {
+            int[] rmSeam = testSC.findHorizontalSeam();
+            Picture overlaid = SCUtility.seamOverlay(testSC.picture(), true, rmSeam);
+            testSC.removeHorizontalSeam(rmSeam);
+            overlaid.show();
+        }
 
         // long startTime = System.currentTimeMillis();
         // int w = 1000;
