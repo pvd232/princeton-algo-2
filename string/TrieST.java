@@ -31,11 +31,11 @@ public class TrieST<Value> {
         return get(key) != null;
     }
 
-    public Value get(String key) {
+    public Object get(String key) {
         Node x = get(root, key, 0);
         if (x == null)
             return null;
-        return (Value) x.val;
+        return x.val;
     }
 
     private Node get(Node x, String key, int d) {

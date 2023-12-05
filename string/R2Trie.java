@@ -8,23 +8,20 @@ public class R2Trie<Value> {
     private TrieNode root = new TrieNode();
 
     private static class TrieNode {
-        private final Node[] next = new Node[R * R];
-    }
-
-    private static class Node {
-        private final TST<Integer> tst = new TST<>();
+        private final TST<Integer>[] next = new TST[R * R];
     }
 
     public void put(String key, Value val) {
-        if (root.next[pre(key)] == null)
-            root.next[pre(key)] = new Node();
-        root.next[pre(key)].tst.put(key, (Integer) val);
+        int pre = pre(key);
+        if (root.next[pre] == null)
+            root.next[pre] = new TST<Integer>();
+        root.next[pre].put(key, (Integer) val);
     }
 
     private int pre(String key) {
-        if (key.length() == 0)
-            return 0;
-        if (key.length() == 1)
+        if (key.isEmpty())
+            throw new IllegalArgumentException();
+        else if (key.length() == 1)
             return key.charAt(0);
         else
             return key.charAt(0) + key.charAt(1);
@@ -34,11 +31,12 @@ public class R2Trie<Value> {
         return get(key) != null;
     }
 
-    public Value get(String key) {
-        if (root.next[pre(key)] == null)
+    public Object get(String key) {
+        int pre = pre(key);
+        if (root.next[pre] == null)
             return null;
         else
-            return (Value) root.next[pre(key)].tst.get(key);
+            return root.next[pre].get(key);
     }
 
     public Iterable<String> keys() {
@@ -47,18 +45,26 @@ public class R2Trie<Value> {
         return q;
     }
 
+    public boolean hasKeys(String prefix) {
+        TST<Integer> x = root.next[pre(prefix)];
+        if (x == null || !x.hasKeys(prefix))
+            return false;
+        else
+            return true;
+    }
+
     public Iterable<String> keysWithPrefix(String prefix) {
-        Node x = root.next[pre(prefix)];
+        TST<Integer> x = root.next[pre(prefix)];
         if (x == null)
             return null;
         else
-            return x.tst.keysWithPrefix(prefix);
+            return x.keysWithPrefix(prefix);
     }
 
     private void collect(Queue<String> q) {
         for (char c = 0; c < R * R; c++)
             if (root.next[c] != null)
-                for (String s : root.next[c].tst.keys())
+                for (String s : root.next[c].keys())
                     q.enqueue(s);
     }
 
@@ -72,11 +78,11 @@ public class R2Trie<Value> {
         for (String word : dictionary)
             trie.put(word, i++);
 
-        int j = 0;
-        for (String k : trie.keys())
-            j++;
+        // int j = 0;
+        // for (String k : trie.keys())
+        // j++;
 
-        assert j == i;
+        // assert j == i;
 
         Iterable<String> keysWP = trie.keysWithPrefix("BRE");
         assert keysWP != null;

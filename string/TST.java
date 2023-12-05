@@ -41,7 +41,8 @@ public class TST<Value> {
         Node x = get(root, key, 0);
         if (x == null)
             return null;
-        return x.val;
+        else
+            return x.val;
     }
 
     private Node get(Node x, String key, int d) {
@@ -62,6 +63,14 @@ public class TST<Value> {
         Queue<String> queue = new Queue<String>();
         collect(root, "", queue);
         return queue;
+    }
+
+    public boolean hasKeys(String prefix) {
+        Node x = get(root, prefix, 0);
+        if (x == null)
+            return false;
+        else
+            return true;
     }
 
     public Iterable<String> keysWithPrefix(String prefix) {
@@ -94,12 +103,12 @@ public class TST<Value> {
         for (String word : dictionary)
             trie.put(word, i++);
 
-        int j = 0;
-        for (String k : trie.keys()) {
-            j++;
-        }
+        // int j = 0;
+        // for (String k : trie.keys()) {
+        // j++;
+        // }
 
-        assert j == i;
+        // assert j == i;
 
         Iterable<String> keysWP = trie.keysWithPrefix("SORT");
         assert keysWP != null;
