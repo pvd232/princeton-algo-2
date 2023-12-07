@@ -42,18 +42,21 @@ public class TST<Value> {
     }
 
     public Value get(String key) {
-        if (LRU.containsKey(key))
-            return LRU.get(key).val;
+        if (prevS.equals(key))
+            return get(prev, key, key.length() - 1).val;
         Node x = get(root, key, 0);
         if (x == null)
             return null;
         else
             return x.val;
+
     }
 
-    private Node cached(String old, String prefix) {
+    private Node cached(String old) {
         if (old.equals(prevS))
             return prev;
+        else if (LRU.containsKey(old))
+            return LRU.get(old);
         else
             return null;
     }
@@ -85,9 +88,11 @@ public class TST<Value> {
     }
 
     public boolean hasPrefix(String old, String prefix) {
-        Node x = cached(old, prefix);
+        Node x = cached(old);
         if (x == null)
             x = get(root, prefix, 0);
+        else
+            x = get(x, prefix, old.length() - 1);
         if (x == null || (x.left == null && x.mid == null && x.right == null))
             return false;
         else

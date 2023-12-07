@@ -125,7 +125,6 @@ public class BoggleSolver {
 
         int score = 0;
         for (String word : solver.getAllValidWords(board)) {
-            // assert bruteDict.contains(word);
             // StdOut.println(word);
             score += solver.scoreOf(word);
         }
