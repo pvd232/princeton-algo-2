@@ -8,6 +8,7 @@ public class BoggleSolver {
     private final R2Trie<Integer> dict;
     private int n;
     private int m;
+    private char[][] g;
 
     // Initializes the data struct w/given array of strings as the dictionary.
     // Assume each word in the dict contains only uppercase letters A through Z.
@@ -26,6 +27,11 @@ public class BoggleSolver {
             throw new IllegalArgumentException();
         m = board.rows();
         n = board.cols();
+        g = new char[m][n];
+
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                g[i][j] = board.getLetter(i, j);
         return findWords(board);
     }
 
@@ -48,8 +54,8 @@ public class BoggleSolver {
     private void findWords(BoggleBoard board, int i, int j, StringBuilder w, StringBuilder add,
             HashSet<String> res) {
 
-        if (w.length() < 2 || dict.hasKeys(w.toString())) {
-            char c = board.getLetter(i, j);
+        if (w.length() < 2 || dict.hasPrefix(w.toString())) {
+            char c = g[i][j];
             if (c == 'Q')
                 w.append("QU");
             else
@@ -122,11 +128,8 @@ public class BoggleSolver {
         BoggleSolver solver = new BoggleSolver(dictionary);
         BoggleBoard board = new BoggleBoard(args[1]);
 
-        // HashSet<String> bruteDict = new HashSet<>();
-        // for (String s : dictionary)
-        // bruteDict.add(s);
         long startTime = System.currentTimeMillis();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 100; i++)
             solver.getAllValidWords(board);
 
         long endTime = System.currentTimeMillis();
@@ -136,7 +139,7 @@ public class BoggleSolver {
         int score = 0;
         for (String word : solver.getAllValidWords(board)) {
             // assert bruteDict.contains(word);
-            StdOut.println(word);
+            // StdOut.println(word);
             score += solver.scoreOf(word);
         }
         StdOut.println("Score = " + score);

@@ -2,9 +2,14 @@ package string;
 
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Queue;
+import java.util.HashMap;
 
 public class TST<Value> {
     private Node root;
+    private final HashMap<String, Node> LRU = new HashMap<>(1000);
+    private Node prev;
+    private String prevS;
+    int prevD;
 
     private class Node {
         private Value val;
@@ -38,6 +43,8 @@ public class TST<Value> {
     }
 
     public Value get(String key) {
+        if (LRU.containsKey(key))
+            return LRU.get(key).val;
         Node x = get(root, key, 0);
         if (x == null)
             return null;
@@ -48,6 +55,11 @@ public class TST<Value> {
     private Node get(Node x, String key, int d) {
         if (x == null)
             return null;
+        else if (LRU.containsKey(key))
+            return LRU.get(key);
+        else if (key.substring(0, key.length() - 1).equals(prevS) && d < key.length() - 1)
+            return get(prev.mid, key, prevD + 1);
+
         char c = key.charAt(d);
         if (c < x.c)
             return get(x.left, key, d);
@@ -55,8 +67,13 @@ public class TST<Value> {
             return get(x.right, key, d);
         else if (d < key.length() - 1)
             return get(x.mid, key, d + 1);
-        else
+        else {
+            prev = x;
+            prevS = key;
+            prevD = d;
+            LRU.put(key, x);
             return x;
+        }
     }
 
     public Iterable<String> keys() {
@@ -65,9 +82,9 @@ public class TST<Value> {
         return queue;
     }
 
-    public boolean hasKeys(String prefix) {
+    public boolean hasPrefix(String prefix) {
         Node x = get(root, prefix, 0);
-        if (x == null)
+        if (x == null || (x.left == null && x.mid == null && x.right == null))
             return false;
         else
             return true;
@@ -102,13 +119,6 @@ public class TST<Value> {
         int i = 0;
         for (String word : dictionary)
             trie.put(word, i++);
-
-        // int j = 0;
-        // for (String k : trie.keys()) {
-        // j++;
-        // }
-
-        // assert j == i;
 
         Iterable<String> keysWP = trie.keysWithPrefix("SORT");
         assert keysWP != null;

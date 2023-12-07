@@ -8,7 +8,7 @@ public class R2Trie<Value> {
     private TrieNode root = new TrieNode();
 
     private static class TrieNode {
-        private final TST<Integer>[] next = new TST[R * R];
+        private final TST<Integer>[] next = new TST[(R * R) + R];
     }
 
     public void put(String key, Value val) {
@@ -45,9 +45,9 @@ public class R2Trie<Value> {
         return q;
     }
 
-    public boolean hasKeys(String prefix) {
+    public boolean hasPrefix(String prefix) {
         TST<Integer> x = root.next[pre(prefix)];
-        if (x == null || !x.hasKeys(prefix))
+        if (x == null || !x.hasPrefix(prefix))
             return false;
         else
             return true;
@@ -77,12 +77,6 @@ public class R2Trie<Value> {
         int i = 0;
         for (String word : dictionary)
             trie.put(word, i++);
-
-        // int j = 0;
-        // for (String k : trie.keys())
-        // j++;
-
-        // assert j == i;
 
         Iterable<String> keysWP = trie.keysWithPrefix("BRE");
         assert keysWP != null;
