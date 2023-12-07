@@ -59,7 +59,6 @@ public class TST<Value> {
             return LRU.get(key);
         else if (key.substring(0, key.length() - 1).equals(prevS) && d < key.length() - 1)
             return get(prev.mid, key, prevD + 1);
-
         char c = key.charAt(d);
         if (c < x.c)
             return get(x.left, key, d);
