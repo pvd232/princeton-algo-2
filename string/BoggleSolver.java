@@ -39,7 +39,7 @@ public class BoggleSolver {
         HashSet<String> res = new HashSet<>();
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++)
-                findWords(board, i, j, new StringBuilder(), new StringBuilder(), res);
+                findWords(board, i, j, new StringBuilder(), new HashSet<>(), res);
         return res;
     }
 
@@ -51,7 +51,7 @@ public class BoggleSolver {
         return s.toString();
     }
 
-    private void findWords(BoggleBoard board, int i, int j, StringBuilder w, StringBuilder add,
+    private void findWords(BoggleBoard board, int i, int j, StringBuilder w, HashSet<String> add,
             HashSet<String> res) {
 
         if (w.length() < 2 || dict.hasPrefix(w.toString())) {
@@ -60,10 +60,9 @@ public class BoggleSolver {
                 w.append("QU");
             else
                 w.append(c);
-            add.append(coord(i, j));
+            add.add(coord(i, j));
 
-            String wS = w.toString(), addS = add.toString();
-            int aN = add.length();
+            String wS = w.toString();
 
             if (w.length() > 2 && dict.contains(wS))
                 res.add(wS);
@@ -71,31 +70,21 @@ public class BoggleSolver {
             int[] dir = { 1, -1 };
             for (int dx : dir) {
                 int adjX = j + dx;
-                if (adjX < n && adjX > -1) {
-                    KMP kmp = new KMP(coord(i, adjX));
-                    if (kmp.search(addS) == aN)
-                        findWords(board, i, adjX, new StringBuilder(wS), new StringBuilder(addS),
-                                res);
+                if (adjX < n && adjX > -1 && !add.contains(coord(i, adjX))) {
+                    findWords(board, i, adjX, new StringBuilder(w), new HashSet<>(add), res);
                 }
             }
             for (int dy : dir) {
                 int adjY = i + dy;
-                if (adjY < m && adjY > -1) {
-                    KMP kmp = new KMP(coord(adjY, j));
-                    if (kmp.search(addS) == aN)
-                        findWords(board, adjY, j, new StringBuilder(wS), new StringBuilder(addS),
-                                res);
+                if (adjY < m && adjY > -1 && !add.contains(coord(adjY, j))) {
+                    findWords(board, adjY, j, new StringBuilder(w), new HashSet<>(add), res);
                 }
             }
             for (int dy : dir) {
                 for (int dx : dir) {
                     int adjX = j + dx, adjY = i + dy;
-                    if (adjX < n && adjX > -1 && adjY < m && adjY > -1) {
-                        KMP kmp = new KMP(coord(adjY, adjX));
-                        if (kmp.search(addS) == aN)
-                            findWords(board, adjY, adjX, new StringBuilder(wS),
-                                    new StringBuilder(addS),
-                                    res);
+                    if (adjX < n && adjX > -1 && adjY < m && adjY > -1 && !add.contains(coord(adjY, adjX))) {
+                        findWords(board, adjY, adjX, new StringBuilder(w), new HashSet<>(add), res);
                     }
                 }
             }
@@ -129,7 +118,7 @@ public class BoggleSolver {
         BoggleBoard board = new BoggleBoard(args[1]);
 
         long startTime = System.currentTimeMillis();
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 1000; i++)
             solver.getAllValidWords(board);
 
         long endTime = System.currentTimeMillis();
