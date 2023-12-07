@@ -9,7 +9,6 @@ public class TST<Value> {
     private final HashMap<String, Node> LRU = new HashMap<>(1000);
     private Node prev;
     private String prevS;
-    int prevD;
 
     private class Node {
         private Value val;
@@ -52,13 +51,18 @@ public class TST<Value> {
             return x.val;
     }
 
+    private Node cached(String old, String prefix) {
+        if (old.equals(prevS))
+            return prev;
+        else
+            return null;
+    }
+
     private Node get(Node x, String key, int d) {
         if (x == null)
             return null;
         else if (LRU.containsKey(key))
             return LRU.get(key);
-        else if (key.substring(0, key.length() - 1).equals(prevS) && d < key.length() - 1)
-            return get(prev.mid, key, prevD + 1);
         char c = key.charAt(d);
         if (c < x.c)
             return get(x.left, key, d);
@@ -69,7 +73,6 @@ public class TST<Value> {
         else {
             prev = x;
             prevS = key;
-            prevD = d;
             LRU.put(key, x);
             return x;
         }
@@ -81,8 +84,10 @@ public class TST<Value> {
         return queue;
     }
 
-    public boolean hasPrefix(String prefix) {
-        Node x = get(root, prefix, 0);
+    public boolean hasPrefix(String old, String prefix) {
+        Node x = cached(old, prefix);
+        if (x == null)
+            x = get(root, prefix, 0);
         if (x == null || (x.left == null && x.mid == null && x.right == null))
             return false;
         else

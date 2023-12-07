@@ -39,22 +39,20 @@ public class BoggleSolver {
         HashSet<String> res = new HashSet<>();
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++)
-                findWords(board, i, j, new StringBuilder(), new HashSet<>(), res);
+                findWords(board, i, j, new StringBuilder(), "", new HashSet<>(), res);
         return res;
     }
 
     private String coord(int i, int j) {
-        StringBuilder s = new StringBuilder();
-        s.append(Integer.toString(i));
-        s.append(Integer.toString(j));
-        s.append(",");
-        return s.toString();
+        return Integer.toString(i) + Integer.toString(j);
     }
 
-    private void findWords(BoggleBoard board, int i, int j, StringBuilder w, HashSet<String> add,
+    private void findWords(BoggleBoard board, int i, int j, StringBuilder w, String old, HashSet<String> add,
             HashSet<String> res) {
+        String newOld = w.toString();
+        if (w.length() < 2 || dict.hasPrefix(old, newOld)) {
+            old = newOld;
 
-        if (w.length() < 2 || dict.hasPrefix(w.toString())) {
             char c = g[i][j];
             if (c == 'Q')
                 w.append("QU");
@@ -71,20 +69,20 @@ public class BoggleSolver {
             for (int dx : dir) {
                 int adjX = j + dx;
                 if (adjX < n && adjX > -1 && !add.contains(coord(i, adjX))) {
-                    findWords(board, i, adjX, new StringBuilder(w), new HashSet<>(add), res);
+                    findWords(board, i, adjX, new StringBuilder(w), old, new HashSet<>(add), res);
                 }
             }
             for (int dy : dir) {
                 int adjY = i + dy;
                 if (adjY < m && adjY > -1 && !add.contains(coord(adjY, j))) {
-                    findWords(board, adjY, j, new StringBuilder(w), new HashSet<>(add), res);
+                    findWords(board, adjY, j, new StringBuilder(w), old, new HashSet<>(add), res);
                 }
             }
             for (int dy : dir) {
                 for (int dx : dir) {
                     int adjX = j + dx, adjY = i + dy;
                     if (adjX < n && adjX > -1 && adjY < m && adjY > -1 && !add.contains(coord(adjY, adjX))) {
-                        findWords(board, adjY, adjX, new StringBuilder(w), new HashSet<>(add), res);
+                        findWords(board, adjY, adjX, new StringBuilder(w), old, new HashSet<>(add), res);
                     }
                 }
             }

@@ -45,9 +45,9 @@ public class R2Trie<Value> {
         return q;
     }
 
-    public boolean hasPrefix(String prefix) {
+    public boolean hasPrefix(String old, String prefix) {
         TST<Integer> x = root.next[pre(prefix)];
-        if (x == null || !x.hasPrefix(prefix))
+        if (x == null || !x.hasPrefix(old, prefix))
             return false;
         else
             return true;
