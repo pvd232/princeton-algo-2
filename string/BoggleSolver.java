@@ -67,17 +67,19 @@ public class BoggleSolver {
         int x = 0;
         int[] res = new int[len];
         int[] dir = { 1, -1 };
-        for (int dx : dir) {
-            int adjX = j + dx;
-            if (adjX < n && adjX > -1)
-                res[x++] = i * n + adjX;
-        }
+        if (n > 1)
+            for (int dx : dir) {
+                int adjX = j + dx;
+                if (adjX < n && adjX > -1)
+                    res[x++] = i * n + adjX;
+            }
         int y = x;
-        for (int dy : dir) {
-            int adjY = i + dy;
-            if (adjY < m && adjY > -1)
-                res[y++] = adjY * n + j;
-        }
+        if (m > 1)
+            for (int dy : dir) {
+                int adjY = i + dy;
+                if (adjY < m && adjY > -1)
+                    res[y++] = adjY * n + j;
+            }
         int xy = y;
         if (m > 1 || n > 1)
             for (int dy : dir)
@@ -98,7 +100,7 @@ public class BoggleSolver {
                     HashSet<String> add = new HashSet<>();
                     add.add(coord(i, j));
                     if (g[i][j] == 'Q')
-                        findWords(board, i, j, new String("QU"), add, res);
+                        findWords(board, i, j, "QU", add, res);
                     else
                         findWords(board, i, j, Character.toString(g[i][j]), add, res);
                 }
@@ -119,9 +121,9 @@ public class BoggleSolver {
             char c = g[row][col];
             String wNew;
             if (c == 'Q')
-                wNew = new String(w + "QU");
+                wNew = w + "QU";
             else
-                wNew = new String(w + c);
+                wNew = w + c;
             if (dict.hasPrefix(w, wNew) && !add.contains(coord(row, col))) {
                 HashSet<String> newAdd = new HashSet<>(add);
                 newAdd.add(coord(row, col));

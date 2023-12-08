@@ -5,9 +5,9 @@ import edu.princeton.cs.algs4.Queue;
 
 public class R2Trie<Value> {
     private static final int R = 26;
-    public final TrieNode root = new TrieNode();
+    private final TrieNode root = new TrieNode();
 
-    public static class TrieNode {
+    private static class TrieNode {
         public final TST[] next = new TST[(R * R) + R];
     }
 
