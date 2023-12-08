@@ -4,23 +4,23 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Queue;
 import java.util.HashMap;
 
-public class TST<Value> {
+public class TST {
     private Node root;
-    private final HashMap<String, Node> LRU = new HashMap<>(1000);
+    private final HashMap<String, Node> cache = new HashMap<>(1000);
     private Node prev;
     private String prevS;
 
     private class Node {
-        private Value val;
+        private Integer val;
         private char c;
         private Node left, mid, right;
     }
 
-    public void put(String key, Value val) {
+    public void put(String key, Integer val) {
         root = put(root, key, val, 0);
     }
 
-    private Node put(Node x, String key, Value val, int d) {
+    private Node put(Node x, String key, Integer val, int d) {
         char c = key.charAt(d);
         if (x == null) {
             x = new Node();
@@ -41,8 +41,8 @@ public class TST<Value> {
         return get(key) != null;
     }
 
-    public Value get(String key) {
-        if (prevS.equals(key))
+    public Integer get(String key) {
+        if (prevS != null && prevS.equals(key))
             return get(prev, key, key.length() - 1).val;
         Node x = get(root, key, 0);
         if (x == null)
@@ -55,8 +55,8 @@ public class TST<Value> {
     private Node cached(String old) {
         if (old.equals(prevS))
             return prev;
-        else if (LRU.containsKey(old))
-            return LRU.get(old);
+        else if (cache.containsKey(old))
+            return cache.get(old);
         else
             return null;
     }
@@ -64,8 +64,8 @@ public class TST<Value> {
     private Node get(Node x, String key, int d) {
         if (x == null)
             return null;
-        else if (LRU.containsKey(key))
-            return LRU.get(key);
+        else if (cache.containsKey(key))
+            return cache.get(key);
         char c = key.charAt(d);
         if (c < x.c)
             return get(x.left, key, d);
@@ -76,7 +76,7 @@ public class TST<Value> {
         else {
             prev = x;
             prevS = key;
-            LRU.put(key, x);
+            cache.put(key, x);
             return x;
         }
     }
@@ -93,10 +93,7 @@ public class TST<Value> {
             x = get(root, prefix, 0);
         else
             x = get(x, prefix, old.length() - 1);
-        if (x == null || (x.left == null && x.mid == null && x.right == null))
-            return false;
-        else
-            return true;
+        return x != null;
     }
 
     public Iterable<String> keysWithPrefix(String prefix) {
@@ -123,7 +120,7 @@ public class TST<Value> {
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
 
-        TST<Integer> trie = new TST<>();
+        TST trie = new TST();
 
         int i = 0;
         for (String word : dictionary)

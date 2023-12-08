@@ -9,6 +9,7 @@ public class BoggleSolver {
     private int n;
     private int m;
     private char[][] g;
+    private int[][] adj;
 
     // Initializes the data struct w/given array of strings as the dictionary.
     // Assume each word in the dict contains only uppercase letters A through Z.
@@ -28,18 +29,72 @@ public class BoggleSolver {
         m = board.rows();
         n = board.cols();
         g = new char[m][n];
-
-        for (int i = 0; i < m; i++)
-            for (int j = 0; j < n; j++)
-                g[i][j] = board.getLetter(i, j);
+        adj = new int[m * n][];
+        mkGraph(board);
         return findWords(board);
+    }
+
+    private void mkGraph(BoggleBoard board) {
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++) {
+                g[i][j] = board.getLetter(i, j);
+                adj[i * n + j] = adjN(i, j);
+            }
+    }
+
+    private int[] adjN(int i, int j) {
+        int len = 0;
+        boolean rowIsEdge = false, colIsEdge = false;
+        if (i == 0 || i == m - 1)
+            rowIsEdge = true;
+        if (j == 0 || j == n - 1)
+            colIsEdge = true;
+
+        if (rowIsEdge && colIsEdge)
+            if (m > 1 && n > 1)
+                len = 3;
+            else
+                len = 1;
+        else if (!rowIsEdge && !colIsEdge)
+            len = 8;
+        else if (m > 2 && n > 2)
+            len = 5;
+        else if (m == 1 || n == 1)
+            len = 2;
+        else
+            len = 1;
+
+        int x = 0;
+        int[] res = new int[len];
+        int[] dir = { 1, -1 };
+        for (int dx : dir) {
+            int adjX = j + dx;
+            if (adjX < n && adjX > -1)
+                res[x++] = i * n + adjX;
+        }
+        int y = x;
+        for (int dy : dir) {
+            int adjY = i + dy;
+            if (adjY < m && adjY > -1)
+                res[y++] = adjY * n + j;
+        }
+        int xy = y;
+        for (int dy : dir)
+            for (int dx : dir) {
+                int adjY = i + dy;
+                int adjX = j + dx;
+                if (adjX < n && adjX > -1 && adjY < m && adjY > -1)
+                    res[xy++] = adjY * n + adjX;
+            }
+        return res;
     }
 
     private Iterable<String> findWords(BoggleBoard board) {
         HashSet<String> res = new HashSet<>();
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++)
-                findWords(board, i, j, new StringBuilder(), "", new HashSet<>(), res);
+                if (dict.hasPrefix("", Character.toString(g[i][j])))
+                    findWords(board, i, j, new StringBuilder(), new HashSet<>(), res);
         return res;
     }
 
@@ -47,45 +102,25 @@ public class BoggleSolver {
         return Integer.toString(i) + Integer.toString(j);
     }
 
-    private void findWords(BoggleBoard board, int i, int j, StringBuilder w, String old, HashSet<String> add,
+    private void findWords(BoggleBoard board, int i, int j, StringBuilder w, HashSet<String> add,
             HashSet<String> res) {
-        String newOld = w.toString();
-        if (w.length() < 2 || dict.hasPrefix(old, newOld)) {
-            old = newOld;
+        w.toString();
+        char c = g[i][j];
+        if (c == 'Q')
+            w.append("QU");
+        else
+            w.append(c);
+        add.add(coord(i, j));
 
-            char c = g[i][j];
-            if (c == 'Q')
-                w.append("QU");
-            else
-                w.append(c);
-            add.add(coord(i, j));
+        String wS = w.toString();
 
-            String wS = w.toString();
+        if (w.length() > 2 && dict.contains(wS))
+            res.add(wS);
 
-            if (w.length() > 2 && dict.contains(wS))
-                res.add(wS);
-
-            int[] dir = { 1, -1 };
-            for (int dx : dir) {
-                int adjX = j + dx;
-                if (adjX < n && adjX > -1 && !add.contains(coord(i, adjX))) {
-                    findWords(board, i, adjX, new StringBuilder(w), old, new HashSet<>(add), res);
-                }
-            }
-            for (int dy : dir) {
-                int adjY = i + dy;
-                if (adjY < m && adjY > -1 && !add.contains(coord(adjY, j))) {
-                    findWords(board, adjY, j, new StringBuilder(w), old, new HashSet<>(add), res);
-                }
-            }
-            for (int dy : dir) {
-                for (int dx : dir) {
-                    int adjX = j + dx, adjY = i + dy;
-                    if (adjX < n && adjX > -1 && adjY < m && adjY > -1 && !add.contains(coord(adjY, adjX))) {
-                        findWords(board, adjY, adjX, new StringBuilder(w), old, new HashSet<>(add), res);
-                    }
-                }
-            }
+        for (int p : adj[i * n + j]) {
+            int row = p / n, col = p % n;
+            if (dict.hasPrefix(wS, wS + g[row][col]) && !add.contains(coord(row, col)))
+                findWords(board, row, col, new StringBuilder(w), new HashSet<>(add), res);
         }
     }
 
@@ -94,16 +129,16 @@ public class BoggleSolver {
     public int scoreOf(String word) {
         if (word == null || !dict.contains(word))
             return 0;
-        int n = word.length();
-        if (n <= 2)
+        int len = word.length();
+        if (len <= 2)
             return 0;
-        else if (n < 5)
+        else if (len < 5)
             return 1;
-        else if (n == 5)
+        else if (len == 5)
             return 2;
-        else if (n == 6)
+        else if (len == 6)
             return 3;
-        else if (n == 7)
+        else if (len == 7)
             return 5;
         else
             return 11;

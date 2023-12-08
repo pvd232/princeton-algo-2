@@ -5,16 +5,18 @@ import edu.princeton.cs.algs4.Queue;
 
 public class R2Trie<Value> {
     private static final int R = 26;
-    private TrieNode root = new TrieNode();
+    private final TrieNode root = new TrieNode();
 
     private static class TrieNode {
-        private final TST<Integer>[] next = new TST[(R * R) + R];
+        private final TST[] next = new TST[(R * R) + R];
     }
 
     public void put(String key, Value val) {
         int pre = pre(key);
-        if (root.next[pre] == null)
-            root.next[pre] = new TST<Integer>();
+        if (root.next[key.charAt(0)] == null)
+            root.next[key.charAt(0)] = new TST();
+        if (key.length() > 1 && root.next[pre] == null)
+            root.next[pre] = new TST();
         root.next[pre].put(key, (Integer) val);
     }
 
@@ -28,7 +30,10 @@ public class R2Trie<Value> {
     }
 
     public boolean contains(String key) {
-        return get(key) != null;
+        if (key.length() < 3 && root.next[pre(key)] != null)
+            return true;
+        else
+            return get(key) != null;
     }
 
     public Object get(String key) {
@@ -46,15 +51,17 @@ public class R2Trie<Value> {
     }
 
     public boolean hasPrefix(String old, String prefix) {
-        TST<Integer> x = root.next[pre(prefix)];
-        if (x == null || !x.hasPrefix(old, prefix))
+        TST x = root.next[pre(prefix)];
+        if (x == null)
             return false;
-        else
+        if (prefix.length() < 3)
             return true;
+        else
+            return x.hasPrefix(old, prefix);
     }
 
     public Iterable<String> keysWithPrefix(String prefix) {
-        TST<Integer> x = root.next[pre(prefix)];
+        TST x = root.next[pre(prefix)];
         if (x == null)
             return null;
         else
