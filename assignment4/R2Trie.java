@@ -3,39 +3,42 @@ import edu.princeton.cs.algs4.Queue;
 
 public class R2Trie<Value> {
     private static final int R = 26;
-    private final TrieNode root = new TrieNode();
+    public final TrieNode root = new TrieNode();
 
-    private static class TrieNode {
-        private final TST[] next = new TST[(R * R) + R];
+    public static class TrieNode {
+        public final TST[] next = new TST[(R * R) + R];
     }
 
     public void put(String key, Value val) {
-        int pre = pre(key);
-        if (root.next[key.charAt(0)] == null)
-            root.next[key.charAt(0)] = new TST();
-        if (key.length() > 1 && root.next[pre] == null)
-            root.next[pre] = new TST();
-        root.next[pre].put(key, (Integer) val);
+        if (root.next[pre(key, true)] == null)
+            root.next[pre(key, true)] = new TST(Character.toString(key.charAt(0)));
+
+        if (key.length() > 1 && root.next[pre(key, false)] == null)
+            root.next[pre(key, false)] = new TST(Character.toString(key.charAt(0)) + Character.toString(key.charAt(1)));
+        if (key.length() > 2)
+            root.next[pre(key, false)].put(key, (Integer) val);
     }
 
-    private int pre(String key) {
-        if (key.isEmpty())
-            throw new IllegalArgumentException();
-        else if (key.length() == 1)
-            return key.charAt(0);
-        else
-            return key.charAt(0) + key.charAt(1);
+    private int pre(String key, boolean first) {
+        int idx = (Character.getNumericValue(key.charAt(0)) - 10) * 26;
+        int shift = (Character.getNumericValue(key.charAt(0)) - 10) * 1;
+        if (first || key.length() == 1) {
+            return idx + shift;
+        } else {
+            int idx2 = Character.getNumericValue(key.charAt(1)) - 10;
+            return idx + shift + idx2;
+        }
     }
 
     public boolean contains(String key) {
-        if (key.length() < 3 && root.next[pre(key)] != null)
+        if (key.length() < 3 && root.next[pre(key, false)] != null)
             return true;
         else
             return get(key) != null;
     }
 
     public Object get(String key) {
-        int pre = pre(key);
+        int pre = pre(key, false);
         if (root.next[pre] == null)
             return null;
         else
@@ -49,21 +52,13 @@ public class R2Trie<Value> {
     }
 
     public boolean hasPrefix(String old, String prefix) {
-        TST x = root.next[pre(prefix)];
+        TST x = root.next[pre(prefix, false)];
         if (x == null)
             return false;
         if (prefix.length() < 3)
             return true;
         else
             return x.hasPrefix(old, prefix);
-    }
-
-    public Iterable<String> keysWithPrefix(String prefix) {
-        TST x = root.next[pre(prefix)];
-        if (x == null)
-            return null;
-        else
-            return x.keysWithPrefix(prefix);
     }
 
     private void collect(Queue<String> q) {
@@ -82,11 +77,6 @@ public class R2Trie<Value> {
         int i = 0;
         for (String word : dictionary)
             trie.put(word, i++);
-
-        Iterable<String> keysWP = trie.keysWithPrefix("BRE");
-        assert keysWP != null;
-        for (String s : keysWP)
-            System.out.println(s);
 
         assert trie.contains("SORT");
         assert trie.contains("BREEID");

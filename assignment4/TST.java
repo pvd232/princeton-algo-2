@@ -1,4 +1,3 @@
-import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Queue;
 import java.util.HashMap;
 
@@ -14,7 +13,17 @@ public class TST {
         private Node left, mid, right;
     }
 
+    public TST(String key) {
+        // if (key.length() == 2)
+        // root = new Node();
+        // else
+        put(key, 0);
+    }
+
     public void put(String key, Integer val) {
+        // if (key.length() > 2)
+        // root = put(root, key, val, 2);
+        // else
         root = put(root, key, val, 0);
     }
 
@@ -42,7 +51,9 @@ public class TST {
     public Integer get(String key) {
         if (prevS != null && prevS.equals(key))
             return get(prev, key, key.length() - 1).val;
+
         Node x = get(root, key, 0);
+        // Node x = get(root, key, 2);
         if (x == null)
             return null;
         else
@@ -89,6 +100,7 @@ public class TST {
         Node x = cached(old);
         if (x == null)
             x = get(root, prefix, 0);
+        // x = get(root, prefix, 2);
         else
             x = get(x, prefix, old.length() - 1);
         return x != null;
@@ -115,14 +127,14 @@ public class TST {
     }
 
     public static void main(String[] args) {
-        In in = new In(args[0]);
-        String[] dictionary = in.readAllStrings();
+        // In in = new In(args[0]);
+        // String[] dictionary = in.readAllStrings();
 
-        TST trie = new TST();
+        TST trie = new TST("");
 
-        int i = 0;
-        for (String word : dictionary)
-            trie.put(word, i++);
+        // int i = 0;
+        // for (String word : dictionary)
+        // trie.put(word, i++, 0);
 
         Iterable<String> keysWP = trie.keysWithPrefix("SORT");
         assert keysWP != null;
