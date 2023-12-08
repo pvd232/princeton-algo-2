@@ -159,9 +159,9 @@ public class BoggleSolver {
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++)
             solver.getAllValidWords(board);
-        Iterable<String> res = solver.getAllValidWords(board);
         long endTime = System.currentTimeMillis();
         long timeElapsed = endTime - startTime;
+        Iterable<String> res = solver.getAllValidWords(board);
 
         int score = 0;
         for (String word : res) {

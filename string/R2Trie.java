@@ -13,16 +13,16 @@ public class R2Trie<Value> {
 
     public void put(String key, Value val) {
         if (root.next[pre(key, true)] == null)
-            root.next[pre(key, true)] = new TST(Character.toString(key.charAt(0)));
+            root.next[pre(key, true)] = new TST();
 
         if (key.length() > 1 && root.next[pre(key, false)] == null)
-            root.next[pre(key, false)] = new TST(Character.toString(key.charAt(0)) + Character.toString(key.charAt(1)));
+            root.next[pre(key, false)] = new TST();
         if (key.length() > 2)
             root.next[pre(key, false)].put(key, (Integer) val);
     }
 
     private int pre(String key, boolean first) {
-        int idx = (Character.getNumericValue(key.charAt(0)) - 10) * 26;
+        int idx = (Character.getNumericValue(key.charAt(0)) - 10) * R;
         int shift = (Character.getNumericValue(key.charAt(0)) - 10) * 1;
         if (first || key.length() == 1) {
             return idx + shift;

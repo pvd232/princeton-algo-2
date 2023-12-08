@@ -20,7 +20,7 @@ public class R2Trie<Value> {
     }
 
     private int pre(String key, boolean first) {
-        int idx = (Character.getNumericValue(key.charAt(0)) - 10) * 26;
+        int idx = (Character.getNumericValue(key.charAt(0)) - 10) * R;
         int shift = (Character.getNumericValue(key.charAt(0)) - 10) * 1;
         if (first || key.length() == 1) {
             return idx + shift;

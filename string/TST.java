@@ -15,18 +15,12 @@ public class TST {
         private Node left, mid, right;
     }
 
-    public TST(String key) {
-        if (key.length() == 2)
-            root = new Node();
-        else
-            put(key, 0);
+    public TST() {
+        root = new Node();
     }
 
     public void put(String key, Integer val) {
-        if (key.length() > 2)
-            root = put(root, key, val, 2);
-        else
-            root = put(root, key, val, 0);
+        root = put(root, key, val, 2);
     }
 
     private Node put(Node x, String key, Integer val, int d) {
@@ -51,7 +45,7 @@ public class TST {
     }
 
     public Integer get(String key) {
-        if (prevS != null && prevS.equals(key))
+        if (key.equals(prevS))
             return get(prev, key, key.length() - 1).val;
 
         Node x = get(root, key, 2);
