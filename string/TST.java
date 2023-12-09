@@ -6,9 +6,11 @@ import java.util.HashMap;
 
 public class TST {
     private Node root;
-    private final HashMap<String, Node> cache = new HashMap<>(500);
+    private final HashMap<String, Node> cache = new HashMap<>(200);
     private Node prev;
     private String prevS;
+    private static final int start = 3;
+    private final boolean isWord;
 
     private class Node {
         private Integer val;
@@ -16,12 +18,20 @@ public class TST {
         private Node left, mid, right;
     }
 
-    public TST() {
+    public TST(String key) {
         root = new Node();
+        if (key.length() == 3)
+            isWord = true;
+        else
+            isWord = false;
+    }
+
+    public boolean isWord() {
+        return isWord;
     }
 
     public void put(String key, int val) {
-        root = put(root, key, val, 2);
+        root = put(root, key, val, start);
     }
 
     private Node put(Node x, String key, Integer val, int d) {
@@ -49,7 +59,7 @@ public class TST {
         if (key.equals(prevS))
             return get(prev, key, key.length() - 1).val;
 
-        Node x = get(root, key, 2);
+        Node x = get(root, key, start);
         if (x == null)
             return null;
         else
@@ -95,7 +105,7 @@ public class TST {
     public boolean hasPrefix(String old, String prefix) {
         Node x = cached(old);
         if (x == null)
-            x = get(root, prefix, 2);
+            x = get(root, prefix, start);
         else
             x = get(x, prefix, old.length() - 1);
         return x != null;
@@ -125,7 +135,7 @@ public class TST {
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
 
-        TST trie = new TST();
+        TST trie = new TST("");
 
         int i = 0;
         for (String word : dictionary)
