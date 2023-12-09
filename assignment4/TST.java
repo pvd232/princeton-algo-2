@@ -3,7 +3,7 @@ import java.util.HashMap;
 
 public class TST {
     private Node root;
-    private final HashMap<String, Node> cache = new HashMap<>(1000);
+    private final HashMap<String, Node> cache = new HashMap<>(10000);
     private Node prev;
     private String prevS;
 
@@ -13,8 +13,7 @@ public class TST {
         private Node left, mid, right;
     }
 
-    public TST(String key) {
-        // put(key, 0);
+    public TST() {
         root = new Node();
     }
 
@@ -123,7 +122,7 @@ public class TST {
         // In in = new In(args[0]);
         // String[] dictionary = in.readAllStrings();
 
-        TST trie = new TST("");
+        TST trie = new TST();
 
         // int i = 0;
         // for (String word : dictionary)
