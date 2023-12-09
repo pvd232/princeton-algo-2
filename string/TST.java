@@ -67,21 +67,23 @@ public class TST {
     }
 
     private Node get(Node x, String key, int d) {
-        if (x == null)
-            return null;
-        char c = key.charAt(d);
-        if (c < x.c)
-            return get(x.left, key, d);
-        else if (c > x.c)
-            return get(x.right, key, d);
-        else if (d < key.length() - 1)
-            return get(x.mid, key, d + 1);
-        else {
-            prev = x;
-            prevS = key;
-            cache.put(key, x);
-            return x;
+        while (x != null) {
+            char c = key.charAt(d);
+            if (c < x.c)
+                x = x.left;
+            else if (c > x.c)
+                x = x.right;
+            else if (d < key.length() - 1) {
+                x = x.mid;
+                d++;
+            } else {
+                prev = x;
+                prevS = key;
+                cache.put(key, x);
+                return x;
+            }
         }
+        return null;
     }
 
     public Iterable<String> keys() {

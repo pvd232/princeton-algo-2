@@ -96,7 +96,7 @@ public class BoggleSolver {
                 if (dict.hasPrefix("", first)) {
                     HashSet<String> add = new HashSet<>();
                     add.add(coord(i, j));
-                    if (g[i][j] == 'Q')
+                    if (first.equals("Q"))
                         findWords(board, i, j, "QU", add, res);
                     else
                         findWords(board, i, j, first, add, res);
@@ -121,10 +121,13 @@ public class BoggleSolver {
                 wNew = w + "QU";
             else
                 wNew = w + c;
-            if (dict.hasPrefix(w, wNew) && !add.contains(coord(row, col))) {
-                HashSet<String> newAdd = new HashSet<>(add);
-                newAdd.add(coord(row, col));
-                findWords(board, row, col, wNew, newAdd, res);
+            if (dict.hasPrefix(w, wNew)) {
+                String coord = coord(row, col);
+                if (!add.contains(coord)) {
+                    HashSet<String> newAdd = new HashSet<>(add);
+                    newAdd.add(coord);
+                    findWords(board, row, col, wNew, newAdd, res);
+                }
             }
         }
     }
