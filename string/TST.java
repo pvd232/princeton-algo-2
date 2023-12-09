@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 public class TST {
     private Node root;
-    private final HashMap<String, Node> cache = new HashMap<>(10000);
+    private final HashMap<String, Node> cache = new HashMap<>(500);
     private Node prev;
     private String prevS;
 
