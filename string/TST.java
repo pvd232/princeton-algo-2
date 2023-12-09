@@ -6,11 +6,9 @@ import java.util.HashMap;
 
 public class TST {
     private Node root;
-    private final HashMap<String, Node> cache = new HashMap<>(200);
+    private final HashMap<String, Node> cache = new HashMap<>(500);
     private Node prev;
     private String prevS;
-    private static final int start = 3;
-    private final boolean isWord;
 
     private class Node {
         private Integer val;
@@ -18,20 +16,12 @@ public class TST {
         private Node left, mid, right;
     }
 
-    public TST(String key) {
+    public TST() {
         root = new Node();
-        if (key.length() == 3)
-            isWord = true;
-        else
-            isWord = false;
-    }
-
-    public boolean isWord() {
-        return isWord;
     }
 
     public void put(String key, int val) {
-        root = put(root, key, val, start);
+        root = put(root, key, val, 2);
     }
 
     private Node put(Node x, String key, Integer val, int d) {
@@ -59,12 +49,11 @@ public class TST {
         if (key.equals(prevS))
             return get(prev, key, key.length() - 1).val;
 
-        Node x = get(root, key, start);
+        Node x = get(root, key, 2);
         if (x == null)
             return null;
         else
             return x.val;
-
     }
 
     private Node cached(String old) {
@@ -79,8 +68,6 @@ public class TST {
     private Node get(Node x, String key, int d) {
         if (x == null)
             return null;
-        else if (cache.containsKey(key))
-            return cache.get(key);
         char c = key.charAt(d);
         if (c < x.c)
             return get(x.left, key, d);
@@ -105,7 +92,7 @@ public class TST {
     public boolean hasPrefix(String old, String prefix) {
         Node x = cached(old);
         if (x == null)
-            x = get(root, prefix, start);
+            x = get(root, prefix, 2);
         else
             x = get(x, prefix, old.length() - 1);
         return x != null;
@@ -135,7 +122,7 @@ public class TST {
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
 
-        TST trie = new TST("");
+        TST trie = new TST();
 
         int i = 0;
         for (String word : dictionary)

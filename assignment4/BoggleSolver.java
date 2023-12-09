@@ -15,7 +15,7 @@ public class BoggleSolver {
         if (dictionary == null)
             throw new IllegalArgumentException();
         dict = new R2Trie<>();
-        int i = 1;
+        int i = 0;
         for (String s : dictionary)
             dict.put(s, i++);
     }
@@ -62,30 +62,26 @@ public class BoggleSolver {
         else
             len = 1;
 
-        int x = 0;
-        int[] res = new int[len];
-        int[] dir = { 1, -1 };
+        int count = 0;
+        int[] dir = { 1, -1 }, res = new int[len];
         if (n > 1)
             for (int dx : dir) {
                 int adjX = j + dx;
                 if (adjX < n && adjX > -1)
-                    res[x++] = i * n + adjX;
+                    res[count++] = i * n + adjX;
             }
-        int y = x;
         if (m > 1)
             for (int dy : dir) {
                 int adjY = i + dy;
                 if (adjY < m && adjY > -1)
-                    res[y++] = adjY * n + j;
+                    res[count++] = adjY * n + j;
             }
-        int xy = y;
         if (m > 1 || n > 1)
             for (int dy : dir)
                 for (int dx : dir) {
-                    int adjY = i + dy;
-                    int adjX = j + dx;
+                    int adjY = i + dy, adjX = j + dx;
                     if (adjX < n && adjX > -1 && adjY < m && adjY > -1)
-                        res[xy++] = adjY * n + adjX;
+                        res[count++] = adjY * n + adjX;
                 }
         return res;
     }
@@ -94,13 +90,14 @@ public class BoggleSolver {
         HashSet<String> res = new HashSet<>();
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++) {
-                if (dict.hasPrefix("", Character.toString(g[i][j]))) {
+                String first = Character.toString(g[i][j]);
+                if (dict.hasPrefix("", first)) {
                     HashSet<String> add = new HashSet<>();
                     add.add(coord(i, j));
                     if (g[i][j] == 'Q')
                         findWords(board, i, j, "QU", add, res);
                     else
-                        findWords(board, i, j, Character.toString(g[i][j]), add, res);
+                        findWords(board, i, j, first, add, res);
                 }
             }
         return res;

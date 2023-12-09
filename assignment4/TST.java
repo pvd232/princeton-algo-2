@@ -1,9 +1,10 @@
 import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.In;
 import java.util.HashMap;
 
 public class TST {
     private Node root;
-    private final HashMap<String, Node> cache = new HashMap<>(10000);
+    private final HashMap<String, Node> cache = new HashMap<>(1000);
     private Node prev;
     private String prevS;
 
@@ -17,7 +18,7 @@ public class TST {
         root = new Node();
     }
 
-    public void put(String key, Integer val) {
+    public void put(String key, int val) {
         root = put(root, key, val, 2);
     }
 
@@ -66,8 +67,6 @@ public class TST {
     private Node get(Node x, String key, int d) {
         if (x == null)
             return null;
-        else if (cache.containsKey(key))
-            return cache.get(key);
         char c = key.charAt(d);
         if (c < x.c)
             return get(x.left, key, d);
@@ -119,14 +118,14 @@ public class TST {
     }
 
     public static void main(String[] args) {
-        // In in = new In(args[0]);
-        // String[] dictionary = in.readAllStrings();
+        In in = new In(args[0]);
+        String[] dictionary = in.readAllStrings();
 
         TST trie = new TST();
 
-        // int i = 0;
-        // for (String word : dictionary)
-        // trie.put(word, i++, 0);
+        int i = 0;
+        for (String word : dictionary)
+            trie.put(word, i++);
 
         Iterable<String> keysWP = trie.keysWithPrefix("SORT");
         assert keysWP != null;

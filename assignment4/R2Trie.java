@@ -13,7 +13,7 @@ public class R2Trie<Value> {
         if (root.next[pre(key, true)] == null)
             root.next[pre(key, true)] = new TST();
 
-        if (key.length() > 1 && root.next[pre(key, false)] == null)
+        if (root.next[pre(key, false)] == null && key.length() > 1)
             root.next[pre(key, false)] = new TST();
         if (key.length() > 2)
             root.next[pre(key, false)].put(key, (Integer) val);
@@ -55,14 +55,14 @@ public class R2Trie<Value> {
         TST x = root.next[pre(prefix, false)];
         if (x == null)
             return false;
-        if (prefix.length() < 3)
+        else if (prefix.length() < 3)
             return true;
         else
             return x.hasPrefix(old, prefix);
     }
 
     private void collect(Queue<String> q) {
-        for (char c = 0; c < R * R; c++)
+        for (char c = R; c < R * R + R; c++)
             if (root.next[c] != null)
                 for (String s : root.next[c].keys())
                     q.enqueue(s);
