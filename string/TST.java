@@ -48,7 +48,8 @@ public class TST {
     public Integer get(String key) {
         if (key.equals(prevS))
             return get(prev, key, key.length() - 1).val;
-
+        else if (cache.containsKey(key))
+            return get(cache.get(key), key, key.length() - 1).val;
         Node x = get(root, key, 2);
         if (x == null)
             return null;
