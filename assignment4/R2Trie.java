@@ -6,15 +6,15 @@ public class R2Trie<Value> {
     private final TrieNode root = new TrieNode();
 
     private static class TrieNode {
-        public final TST[] next = new TST[(R * R) + R];
+        public final TrieST[] next = new TrieST[(R * R) + R];
     }
 
     public void put(String key, Value val) {
         if (root.next[pre(key, true)] == null)
-            root.next[pre(key, true)] = new TST();
+            root.next[pre(key, true)] = new TrieST();
 
         if (root.next[pre(key, false)] == null && key.length() > 1)
-            root.next[pre(key, false)] = new TST();
+            root.next[pre(key, false)] = new TrieST();
         if (key.length() > 2)
             root.next[pre(key, false)].put(key, (Integer) val);
     }
@@ -31,7 +31,7 @@ public class R2Trie<Value> {
     }
 
     public boolean contains(String key) {
-        if (key.length() < 3 && root.next[pre(key, false)] != null)
+        if (root.next[pre(key, false)] != null && key.length() < 3)
             return true;
         else
             return get(key) != null;
@@ -52,7 +52,7 @@ public class R2Trie<Value> {
     }
 
     public boolean hasPrefix(String old, String prefix) {
-        TST x = root.next[pre(prefix, false)];
+        TrieST x = root.next[pre(prefix, false)];
         if (x == null)
             return false;
         else if (prefix.length() < 3)

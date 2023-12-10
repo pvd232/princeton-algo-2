@@ -135,12 +135,10 @@ public class BoggleSolver {
     // Returns the score of the given word if it is in the dict, zero otherwise.
     // (You can assume the word contains only the uppercase letters A through Z.)
     public int scoreOf(String word) {
-        if (word == null || !dict.contains(word))
+        if (word == null || word.length() < 3 || !dict.contains(word))
             return 0;
         int len = word.length();
-        if (len <= 2)
-            return 0;
-        else if (len < 5)
+        if (len < 5)
             return 1;
         else if (len == 5)
             return 2;
@@ -158,20 +156,38 @@ public class BoggleSolver {
         BoggleSolver solver = new BoggleSolver(dictionary);
         BoggleBoard board = new BoggleBoard(args[1]);
 
+        // long startTime = System.currentTimeMillis();
+        // for (int i = 0; i < 1000; i++)
+        // solver.getAllValidWords(board);
+        // long endTime = System.currentTimeMillis();
+        // long timeElapsed = endTime - startTime;
+        // Iterable<String> res = solver.getAllValidWords(board);
+
+        // int score = 0, wordCount = 0;
+        // for (String word : res) {
+        // StdOut.println("word " + word);
+        // score += solver.scoreOf(word);
+        // wordCount++;
+        // }
+        // System.out.println("Time: " + timeElapsed);
+
+        // StdOut.println("Score = " + score + " Word count = " + wordCount);
+        int count = 0;
         long startTime = System.currentTimeMillis();
-        for (int i = 0; i < 1000; i++)
+        while (System.currentTimeMillis() - startTime < 5000) {
             solver.getAllValidWords(board);
-        long endTime = System.currentTimeMillis();
-        long timeElapsed = endTime - startTime;
+            count++;
+        }
+        // long endTime = System.currentTimeMillis();
+        // long timeElapsed = endTime - startTime;
         Iterable<String> res = solver.getAllValidWords(board);
 
         int score = 0;
         for (String word : res) {
-            StdOut.println("word " + word);
+            // StdOut.println("word " + word);
             score += solver.scoreOf(word);
         }
-        System.out.println("Time: " + timeElapsed);
-
+        System.out.println("Calls per second: " + count / 5);
         StdOut.println("Score = " + score);
     }
 }

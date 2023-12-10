@@ -3,7 +3,7 @@ import edu.princeton.cs.algs4.In;
 import java.util.HashMap;
 
 public class TST {
-    private Node root;
+    private Node root = new Node();
     private final HashMap<String, Node> cache = new HashMap<>(1000);
     private Node prev;
     private String prevS;
@@ -12,10 +12,6 @@ public class TST {
         private Integer val;
         private char c;
         private Node left, mid, right;
-    }
-
-    public TST() {
-        root = new Node();
     }
 
     public void put(String key, int val) {
@@ -65,21 +61,23 @@ public class TST {
     }
 
     private Node get(Node x, String key, int d) {
-        if (x == null)
-            return null;
-        char c = key.charAt(d);
-        if (c < x.c)
-            return get(x.left, key, d);
-        else if (c > x.c)
-            return get(x.right, key, d);
-        else if (d < key.length() - 1)
-            return get(x.mid, key, d + 1);
-        else {
-            prev = x;
-            prevS = key;
-            cache.put(key, x);
-            return x;
+        while (x != null) {
+            char c = key.charAt(d);
+            if (c < x.c)
+                x = x.left;
+            else if (c > x.c)
+                x = x.right;
+            else if (d < key.length() - 1) {
+                x = x.mid;
+                d++;
+            } else {
+                prev = x;
+                prevS = key;
+                cache.put(key, x);
+                return x;
+            }
         }
+        return null;
     }
 
     public Iterable<String> keys() {

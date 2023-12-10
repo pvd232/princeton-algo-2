@@ -5,8 +5,8 @@ import edu.princeton.cs.algs4.In;
 import java.util.HashMap;
 
 public class TST {
-    private Node root;
-    private final HashMap<String, Node> cache = new HashMap<>(500);
+    private Node root = new Node();
+    private final HashMap<String, Node> cache = new HashMap<>(1000);
     private Node prev;
     private String prevS;
 
@@ -14,10 +14,6 @@ public class TST {
         private Integer val;
         private char c;
         private Node left, mid, right;
-    }
-
-    public TST() {
-        root = new Node();
     }
 
     public void put(String key, int val) {
@@ -48,13 +44,13 @@ public class TST {
     public Integer get(String key) {
         if (key.equals(prevS))
             return get(prev, key, key.length() - 1).val;
-        else if (cache.containsKey(key))
-            return get(cache.get(key), key, key.length() - 1).val;
+
         Node x = get(root, key, 2);
         if (x == null)
             return null;
         else
             return x.val;
+
     }
 
     private Node cached(String old) {
