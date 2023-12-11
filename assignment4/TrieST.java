@@ -1,42 +1,41 @@
 import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.Stack;
 
 public class TrieST {
     private static final int R = 26;
     private Node root = new Node();
-    private Node prev;
+    private Stack<Node> path = new Stack<>();
 
     private static class Node {
         private String val;
-        private String path = "";
-        private Node[] next = new Node[R];
+        private String path;
+        private final Node[] next = new Node[R];
     }
 
-    public void put(String key, String val) {
-        root = put(root, key, val, 2);
+    public void put(String key) {
+        root = put(root, key, 0);
     }
 
-    private Node put(Node x, String key, String val, int d) {
+    private Node put(Node x, String key, int d) {
         if (x == null)
             x = new Node();
 
         if (d == key.length()) {
-            x.val = val;
-            x.path = val;
+            x.val = key;
+            x.path = key;
             return x;
         }
         char c = key.charAt(d);
-        x.path = key.substring(0, d);
-        x.next[Character.getNumericValue(c) - 10] = put(x.next[Character.getNumericValue(c) - 10], key, val, d + 1);
+        if (x.path == null)
+            x.path = key.substring(0, d);
+        x.next[Character.getNumericValue(c) - 10] = put(x.next[Character.getNumericValue(c) - 10], key, d + 1);
         return x;
     }
 
     public String get(String key) {
-        Node x;
-        if (prev != null && key.equals(prev.path))
-            x = prev;
-        else
-            x = get(root, key, 2);
-
+        // if (prev != null && key.equals(prev.path))
+        // return prev.val;
+        Node x = get(root, key, 0);
         if (x == null)
             return null;
         else
@@ -63,30 +62,50 @@ public class TrieST {
                 return get(x.next[Character.getNumericValue(ch) - 10], key, d, 'U');
             else
                 return get(x.next[Character.getNumericValue(ch) - 10], key, d + 1, ch);
-        } else {
-            prev = x;
+        } else
             return x;
-        }
     }
 
-    private Node cached(String old) {
-        if (prev != null && old.equals(prev.path))
-            return prev;
-        else
+    public boolean contains(String key) {
+        return get(key) != null;
+    }
+
+    private Node cached() {
+        if (path.isEmpty())
             return null;
+        else
+            return path.peek();
     }
 
     public String prefix(String old, char c) {
-        Node x = cached(old);
-        if (x == null)
-            x = get(root, old, 2, c);
+        Node x;
+        if (path.isEmpty())
+            x = get(root, old, 0, c);
         else
-            x = get(x, old, old.length(), c);
+            x = get(path.peek(), old, old.length(), c);
+        // if (x == null)
+        // x = get(root, old, 0, c);
+        // else
 
         if (x == null)
             return null;
-        else
+        else {
+            path.push(x);
+            // prev = x;
             return x.path;
+        }
+
+    }
+
+    public void remove() {
+        // System.out.println(path.size());
+        // assert path.size() > 0;
+        path.pop();
+    }
+
+    public void reset() {
+        while (path.size() > 1)
+            path.pop();
     }
 
     public Iterable<String> keys() {
@@ -97,7 +116,7 @@ public class TrieST {
 
     public Iterable<String> keysWithPrefix(String prefix) {
         Queue<String> q = new Queue<>();
-        Node x = get(root, prefix, 2);
+        Node x = get(root, prefix, 0);
         collect(x, prefix, q);
         return q;
     }

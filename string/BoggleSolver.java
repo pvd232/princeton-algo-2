@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
 public class BoggleSolver {
-    private final R2Trie<Integer> dict;
+    private final TrieST dict;
     private int n;
     private int m;
     private char[][] g;
@@ -16,7 +16,7 @@ public class BoggleSolver {
     public BoggleSolver(String[] dictionary) {
         if (dictionary == null)
             throw new IllegalArgumentException();
-        dict = new R2Trie<>();
+        dict = new TrieST();
         for (String s : dictionary)
             dict.put(s);
     }
@@ -91,6 +91,7 @@ public class BoggleSolver {
         HashSet<String> res = new HashSet<>();
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++) {
+                dict.reset();
                 String wNew = dict.prefix("", g[i][j]);
                 if (wNew != null) {
                     HashSet<String> add = new HashSet<>();
@@ -112,27 +113,25 @@ public class BoggleSolver {
         for (int p : adj[i * n + j]) {
             int row = p / n, col = p % n;
             char c = g[row][col];
-            // if (w.length() > 1 && w.substring(0, 2).equals("EQ"))
-            // System.out.println("w " + w);
-            String wNew = dict.prefix(w, c);
-            if (wNew != null) {
-
-                String coord = coord(row, col);
-                if (!add.contains(coord)) {
+            String coord = coord(row, col);
+            if (!add.contains(coord)) {
+                String wNew = dict.prefix(w, c);
+                if (wNew != null) {
                     HashSet<String> newAdd = new HashSet<>(add);
                     newAdd.add(coord);
                     findWords(board, row, col, wNew, newAdd, res);
                 }
             }
         }
+        dict.remove();
     }
 
     // Returns the score of the given word if it is in the dict, zero otherwise.
     // (You can assume the word contains only the uppercase letters A through Z.)
     public int scoreOf(String word) {
-        if (word == null || word.length() < 3 || !dict.contains(word))
-            return 0;
         int len = word.length();
+        if (len < 3 || !dict.contains(word))
+            return 0;
         if (len < 5)
             return 1;
         else if (len == 5)
@@ -149,24 +148,6 @@ public class BoggleSolver {
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
         BoggleSolver solver = new BoggleSolver(dictionary);
-        // BoggleBoard board = new BoggleBoard(args[1]);
-        // assert solver.dict.contains("EQUATIONS");
-        // long startTime = System.currentTimeMillis();
-        // for (int i = 0; i < 1000; i++)
-        // solver.getAllValidWords(board);
-        // long endTime = System.currentTimeMillis();
-        // long timeElapsed = endTime - startTime;
-        // Iterable<String> res = solver.getAllValidWords(board);
-
-        // int score = 0, wordCount = 0;
-        // for (String word : res) {
-        // StdOut.println("word " + word);
-        // score += solver.scoreOf(word);
-        // wordCount++;
-        // }
-        // System.out.println("Time: " + timeElapsed);
-
-        // StdOut.println("Score = " + score + " Word count = " + wordCount);
         int count = 0, wordCount = 0;
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < 5000) {
@@ -174,17 +155,24 @@ public class BoggleSolver {
             solver.getAllValidWords(board);
             count++;
         }
+        // while (count < 1000) {
         // BoggleBoard board = new BoggleBoard();
-
-        // Iterable<String> res = solver.getAllValidWords(board);
-
-        // int score = 0;
-        // for (String word : res) {
-        // StdOut.println("word " + word);
-        // score += solver.scoreOf(word);
-        // wordCount++;
+        // solver.getAllValidWords(board);
+        // count++;
         // }
+        long endTime = System.currentTimeMillis() - startTime;
+        BoggleBoard board = new BoggleBoard(args[1]);
+
+        Iterable<String> res = solver.getAllValidWords(board);
+
+        int score = 0;
+        for (String word : res) {
+            StdOut.println("word " + word);
+            score += solver.scoreOf(word);
+            wordCount++;
+        }
         System.out.println("Calls per second: " + count / 5);
-        // StdOut.println("Score = " + score + " Word count = " + wordCount);
+        // System.out.println("Time: " + endTime);
+        StdOut.println("Score = " + score + " Word count = " + wordCount);
     }
 }
