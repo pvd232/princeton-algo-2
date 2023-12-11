@@ -112,8 +112,11 @@ public class BoggleSolver {
         for (int p : adj[i * n + j]) {
             int row = p / n, col = p % n;
             char c = g[row][col];
+            // if (w.length() > 1 && w.substring(0, 2).equals("EQ"))
+            // System.out.println("w " + w);
             String wNew = dict.prefix(w, c);
             if (wNew != null) {
+
                 String coord = coord(row, col);
                 if (!add.contains(coord)) {
                     HashSet<String> newAdd = new HashSet<>(add);
@@ -146,8 +149,8 @@ public class BoggleSolver {
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
         BoggleSolver solver = new BoggleSolver(dictionary);
-        BoggleBoard board = new BoggleBoard(args[1]);
-
+        // BoggleBoard board = new BoggleBoard(args[1]);
+        // assert solver.dict.contains("EQUATIONS");
         // long startTime = System.currentTimeMillis();
         // for (int i = 0; i < 1000; i++)
         // solver.getAllValidWords(board);
@@ -167,18 +170,21 @@ public class BoggleSolver {
         int count = 0, wordCount = 0;
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < 5000) {
+            BoggleBoard board = new BoggleBoard();
             solver.getAllValidWords(board);
             count++;
         }
-        Iterable<String> res = solver.getAllValidWords(board);
+        // BoggleBoard board = new BoggleBoard();
 
-        int score = 0;
-        for (String word : res) {
-            StdOut.println("word " + word);
-            score += solver.scoreOf(word);
-            wordCount++;
-        }
+        // Iterable<String> res = solver.getAllValidWords(board);
+
+        // int score = 0;
+        // for (String word : res) {
+        // StdOut.println("word " + word);
+        // score += solver.scoreOf(word);
+        // wordCount++;
+        // }
         System.out.println("Calls per second: " + count / 5);
-        StdOut.println("Score = " + score + " Word count = " + wordCount);
+        // StdOut.println("Score = " + score + " Word count = " + wordCount);
     }
 }

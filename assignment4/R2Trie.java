@@ -16,13 +16,12 @@ public class R2Trie<Value> {
         if (root.next[pre(key, false)] == null && key.length() > 1)
             root.next[pre(key, false)] = new TrieST();
         if (key.length() > 2)
-            root.next[pre(key, false)].put(key, key,
-                    Character.toString(key.charAt(0)) + Character.toString(key.charAt(1)));
+            root.next[pre(key, false)].put(key, key);
     }
 
     private int pre(String key, boolean first) {
         int idx = (Character.getNumericValue(key.charAt(0)) - 10) * R;
-        int shift = (Character.getNumericValue(key.charAt(0)) - 10) * 1;
+        int shift = (Character.getNumericValue(key.charAt(0)) - 10);
         if (first || key.length() == 1) {
             return idx + shift;
         } else {
@@ -40,6 +39,7 @@ public class R2Trie<Value> {
 
     public Object get(String key) {
         int pre = pre(key, false);
+
         if (root.next[pre] == null)
             return null;
         else
@@ -53,28 +53,26 @@ public class R2Trie<Value> {
     }
 
     public String prefix(String old, char c) {
-        String idx;
         if (old.length() < 2) {
-            if (c == 'Q')
-                idx = old + "QU";
-            else
-                idx = old + c;
-        } else
-            idx = old;
+            if (c != 'Q' || old.isBlank()) {
+                if (c != 'Q')
+                    old = old + Character.toString(c);
+                else
+                    old = "QU";
+                if (root.next[pre(old, false)] != null)
+                    return old;
+                else
+                    return null;
+            } else {
+                old = old + "Q";
+                c = 'U';
+            }
+        }
 
-        TrieST x = root.next[pre(idx, false)];
-
+        TrieST x = root.next[pre(old, false)];
         if (x == null)
             return null;
-        else if (old.length() < 2 && idx.length() < 3)
-            return idx;
-        else if (c == 'Q') {
-            if (old.length() < 2)
-                return x.prefix(old, idx);
-            else
-                return x.prefix(old, old + "QU");
-
-        } else
+        else
             return x.prefix(old, c);
     }
 

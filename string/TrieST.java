@@ -9,17 +9,18 @@ public class TrieST {
 
     private static class Node {
         private String val;
-        private String path;
+        private String path = "";
         private Node[] next = new Node[R];
     }
 
-    public void put(String key, String val, String start) {
+    public void put(String key, String val) {
         root = put(root, key, val, 2);
     }
 
     private Node put(Node x, String key, String val, int d) {
         if (x == null)
             x = new Node();
+
         if (d == key.length()) {
             x.val = val;
             x.path = val;
@@ -27,7 +28,6 @@ public class TrieST {
         }
         char c = key.charAt(d);
         x.path = key.substring(0, d);
-
         x.next[Character.getNumericValue(c) - 10] = put(x.next[Character.getNumericValue(c) - 10], key, val, d + 1);
         return x;
     }
@@ -60,12 +60,12 @@ public class TrieST {
             return null;
         if (d < key.length())
             return get(x.next[Character.getNumericValue(key.charAt(d)) - 10], key, d + 1, ch);
-        else if (d == key.length())
+        else if (d == key.length()) {
             if (ch == 'Q')
                 return get(x.next[Character.getNumericValue(ch) - 10], key, d, 'U');
             else
                 return get(x.next[Character.getNumericValue(ch) - 10], key, d + 1, ch);
-        else {
+        } else {
             prev = x;
             return x;
         }
@@ -77,19 +77,6 @@ public class TrieST {
         else
             return null;
     }
-
-    // public String prefix(String old, String prefix) {
-    // Node x = cached(old);
-    // if (x == null)
-    // x = get(root, prefix, 2);
-    // else
-    // x = get(x, prefix, old.length());
-
-    // if (x == null)
-    // return null;
-    // else
-    // return prefix;
-    // }
 
     public String prefix(String old, char c) {
         Node x = cached(old);
@@ -123,6 +110,6 @@ public class TrieST {
         if (x.val != null)
             q.enqueue(prefix);
         for (char c = 0; c < R; c++)
-            collect(x.next[Character.getNumericValue(c) - 10], prefix + c, q);
+            collect(x.next[c], prefix + c, q);
     }
 }
