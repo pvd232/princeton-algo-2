@@ -7,15 +7,15 @@ public class TrieST {
     private String prevS;
 
     private static class Node {
-        private Object val;
+        private String val;
         private Node[] next = new Node[R];
     }
 
-    public void put(String key, Integer val) {
+    public void put(String key, String val) {
         root = put(root, key, val, 2);
     }
 
-    private Node put(Node x, String key, Integer val, int d) {
+    private Node put(Node x, String key, String val, int d) {
         if (x == null)
             x = new Node();
         if (d == key.length()) {
@@ -27,27 +27,7 @@ public class TrieST {
         return x;
     }
 
-    public boolean containsKey(String key) {
-        return get(key) != null;
-    }
-
-    private Node cached(String old) {
-        if (old.equals(prevS))
-            return prev;
-        else
-            return null;
-    }
-
-    public boolean hasPrefix(String old, String prefix) {
-        Node x = cached(old);
-        if (x == null)
-            x = get(root, prefix, 2);
-        else
-            x = get(x, prefix, old.length());
-        return x != null;
-    }
-
-    public Object get(String key) {
+    public String get(String key) {
         Node x;
         if (key.equals(prevS))
             x = prev;
@@ -63,24 +43,60 @@ public class TrieST {
     private Node get(Node x, String key, int d) {
         if (x == null)
             return null;
-        if (d == key.length()) {
-            prev = x;
-            prevS = key;
+        if (d == key.length())
             return x;
-        }
+
         char c = key.charAt(d);
         return get(x.next[Character.getNumericValue(c) - 10], key, d + 1);
     }
-    // private Node get(Node x, String key, int d) {
-    // while (d < key.length()) {
-    // if (x == null)
-    // return null;
-    // x = x.next[Character.getNumericValue(key.charAt(d++)) - 10];
-    // }
-    // prev = x;
-    // prevS = key;
-    // return x;
-    // }
+
+    private Node get(Node x, String key, int d, char ch) {
+        while (d < key.length()) {
+            if (x == null)
+                return null;
+            x = x.next[Character.getNumericValue(key.charAt(d++)) - 10];
+        }
+        x = x.next[Character.getNumericValue(ch) - 10];
+        // if (ch != 'Q')
+        prevS = key + ch;
+        // else
+        // prevS = key + "QU";
+        prev = x;
+        return x;
+    }
+
+    private Node cached(String old) {
+        if (old.equals(prevS))
+            return prev;
+        else
+            return null;
+    }
+
+    public String prefix(String old, String prefix) {
+        Node x = cached(old);
+        if (x == null)
+            x = get(root, prefix, 2);
+        else
+            x = get(x, prefix, old.length());
+
+        if (x == null)
+            return null;
+        else
+            return prefix;
+    }
+
+    public String prefix(String old, char c) {
+        Node x = cached(old);
+        if (x == null)
+            x = get(root, old, 2, c);
+        else
+            x = get(x, old, old.length(), c);
+
+        if (x == null)
+            return null;
+        else
+            return prevS;
+    }
 
     public Iterable<String> keys() {
         Queue<String> queue = new Queue<String>();
@@ -88,12 +104,12 @@ public class TrieST {
         return queue;
     }
 
-    public Iterable<String> keysWithPrefix(String prefix) {
-        Queue<String> q = new Queue<>();
-        Node x = get(root, prefix, 2);
-        collect(x, prefix, q);
-        return q;
-    }
+    // public Iterable<String> keysWithPrefix(String prefix) {
+    // Queue<String> q = new Queue<>();
+    // Node x = get(root, prefix, 2);
+    // collect(x, prefix, q);
+    // return q;
+    // }
 
     private void collect(Node x, String prefix, Queue<String> q) {
         if (x == null)

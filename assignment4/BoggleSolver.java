@@ -15,9 +15,8 @@ public class BoggleSolver {
         if (dictionary == null)
             throw new IllegalArgumentException();
         dict = new R2Trie<>();
-        int i = 0;
         for (String s : dictionary)
-            dict.put(s, i++);
+            dict.put(s);
     }
 
     // Returns the set of all valid words in the given Boggle board, as an Iterable.
@@ -90,14 +89,11 @@ public class BoggleSolver {
         HashSet<String> res = new HashSet<>();
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++) {
-                String first = Character.toString(g[i][j]);
-                if (dict.hasPrefix("", first)) {
+                String wNew = dict.prefix("", g[i][j]);
+                if (wNew != null) {
                     HashSet<String> add = new HashSet<>();
                     add.add(coord(i, j));
-                    if (first.equals("Q"))
-                        findWords(board, i, j, "QU", add, res);
-                    else
-                        findWords(board, i, j, first, add, res);
+                    findWords(board, i, j, wNew, add, res);
                 }
             }
         return res;
@@ -114,12 +110,8 @@ public class BoggleSolver {
         for (int p : adj[i * n + j]) {
             int row = p / n, col = p % n;
             char c = g[row][col];
-            String wNew;
-            if (c == 'Q')
-                wNew = w + "QU";
-            else
-                wNew = w + c;
-            if (dict.hasPrefix(w, wNew)) {
+            String wNew = dict.prefix(w, c);
+            if (wNew != null) {
                 String coord = coord(row, col);
                 if (!add.contains(coord)) {
                     HashSet<String> newAdd = new HashSet<>(add);
@@ -170,22 +162,21 @@ public class BoggleSolver {
         // System.out.println("Time: " + timeElapsed);
 
         // StdOut.println("Score = " + score + " Word count = " + wordCount);
-        int count = 0;
+        int count = 0, wordCount = 0;
         long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < 5000) {
             solver.getAllValidWords(board);
             count++;
         }
-        // long endTime = System.currentTimeMillis();
-        // long timeElapsed = endTime - startTime;
         Iterable<String> res = solver.getAllValidWords(board);
 
         int score = 0;
         for (String word : res) {
-            // StdOut.println("word " + word);
+            StdOut.println("word " + word);
             score += solver.scoreOf(word);
+            wordCount++;
         }
         System.out.println("Calls per second: " + count / 5);
-        StdOut.println("Score = " + score);
+        StdOut.println("Score = " + score + " Word count = " + wordCount);
     }
 }

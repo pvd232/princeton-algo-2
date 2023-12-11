@@ -11,14 +11,14 @@ public class R2Trie<Value> {
         public final TrieST[] next = new TrieST[(R * R) + R];
     }
 
-    public void put(String key, Value val) {
+    public void put(String key) {
         if (root.next[pre(key, true)] == null)
             root.next[pre(key, true)] = new TrieST();
 
         if (root.next[pre(key, false)] == null && key.length() > 1)
             root.next[pre(key, false)] = new TrieST();
         if (key.length() > 2)
-            root.next[pre(key, false)].put(key, (Integer) val);
+            root.next[pre(key, false)].put(key, key);
     }
 
     private int pre(String key, boolean first) {
@@ -53,14 +53,30 @@ public class R2Trie<Value> {
         return q;
     }
 
-    public boolean hasPrefix(String old, String prefix) {
-        TrieST x = root.next[pre(prefix, false)];
+    public String prefix(String old, char c) {
+        String idx;
+        if (old.length() < 2) {
+            if (c == 'Q')
+                idx = old + "QU";
+            else
+                idx = old + c;
+        } else
+            idx = old;
+
+        TrieST x = root.next[pre(idx, false)];
+
         if (x == null)
-            return false;
-        else if (prefix.length() < 3)
-            return true;
-        else
-            return x.hasPrefix(old, prefix);
+            return null;
+        else if (old.length() < 2 && idx.length() < 3)
+            return idx;
+        else if (c == 'Q') {
+            if (old.length() < 2)
+                return x.prefix(old, idx);
+            else
+                return x.prefix(old, old + "QU");
+
+        } else
+            return x.prefix(old, c);
     }
 
     private void collect(Queue<String> q) {
@@ -76,9 +92,8 @@ public class R2Trie<Value> {
 
         R2Trie<Integer> trie = new R2Trie<>();
 
-        int i = 0;
         for (String word : dictionary)
-            trie.put(word, i++);
+            trie.put(word);
 
         assert trie.contains("SORT");
         assert trie.contains("BREEID");
