@@ -6,14 +6,14 @@ public class TrieST {
     private static final int R = 26;
     private Node root = new Node();
     private Node prev;
-    private String prevS;
 
     private static class Node {
         private String val;
+        private String path;
         private Node[] next = new Node[R];
     }
 
-    public void put(String key, String val) {
+    public void put(String key, String val, String start) {
         root = put(root, key, val, 2);
     }
 
@@ -22,16 +22,19 @@ public class TrieST {
             x = new Node();
         if (d == key.length()) {
             x.val = val;
+            x.path = val;
             return x;
         }
         char c = key.charAt(d);
+        x.path = key.substring(0, d);
+
         x.next[Character.getNumericValue(c) - 10] = put(x.next[Character.getNumericValue(c) - 10], key, val, d + 1);
         return x;
     }
 
     public String get(String key) {
         Node x;
-        if (key.equals(prevS))
+        if (prev != null && key.equals(prev.path))
             x = prev;
         else
             x = get(root, key, 2);
@@ -45,7 +48,7 @@ public class TrieST {
     private Node get(Node x, String key, int d) {
         if (x == null)
             return null;
-        if (d == key.length())
+        else if (d == key.length())
             return x;
 
         char c = key.charAt(d);
@@ -53,36 +56,40 @@ public class TrieST {
     }
 
     private Node get(Node x, String key, int d, char ch) {
-        while (d < key.length()) {
-            if (x == null)
-                return null;
-            x = x.next[Character.getNumericValue(key.charAt(d++)) - 10];
+        if (x == null)
+            return null;
+        if (d < key.length())
+            return get(x.next[Character.getNumericValue(key.charAt(d)) - 10], key, d + 1, ch);
+        else if (d == key.length())
+            if (ch == 'Q')
+                return get(x.next[Character.getNumericValue(ch) - 10], key, d, 'U');
+            else
+                return get(x.next[Character.getNumericValue(ch) - 10], key, d + 1, ch);
+        else {
+            prev = x;
+            return x;
         }
-        x = x.next[Character.getNumericValue(ch) - 10];
-        prevS = key + ch;
-        prev = x;
-        return x;
     }
 
     private Node cached(String old) {
-        if (old.equals(prevS))
+        if (prev != null && old.equals(prev.path))
             return prev;
         else
             return null;
     }
 
-    public String prefix(String old, String prefix) {
-        Node x = cached(old);
-        if (x == null)
-            x = get(root, prefix, 2);
-        else
-            x = get(x, prefix, old.length());
+    // public String prefix(String old, String prefix) {
+    // Node x = cached(old);
+    // if (x == null)
+    // x = get(root, prefix, 2);
+    // else
+    // x = get(x, prefix, old.length());
 
-        if (x == null)
-            return null;
-        else
-            return prefix;
-    }
+    // if (x == null)
+    // return null;
+    // else
+    // return prefix;
+    // }
 
     public String prefix(String old, char c) {
         Node x = cached(old);
@@ -94,7 +101,7 @@ public class TrieST {
         if (x == null)
             return null;
         else
-            return prevS;
+            return x.path;
     }
 
     public Iterable<String> keys() {

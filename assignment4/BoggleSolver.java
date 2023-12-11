@@ -146,37 +146,37 @@ public class BoggleSolver {
         BoggleSolver solver = new BoggleSolver(dictionary);
         BoggleBoard board = new BoggleBoard(args[1]);
 
-        // long startTime = System.currentTimeMillis();
-        // for (int i = 0; i < 1000; i++)
-        // solver.getAllValidWords(board);
-        // long endTime = System.currentTimeMillis();
-        // long timeElapsed = endTime - startTime;
-        // Iterable<String> res = solver.getAllValidWords(board);
-
-        // int score = 0, wordCount = 0;
-        // for (String word : res) {
-        // StdOut.println("word " + word);
-        // score += solver.scoreOf(word);
-        // wordCount++;
-        // }
-        // System.out.println("Time: " + timeElapsed);
-
-        // StdOut.println("Score = " + score + " Word count = " + wordCount);
-        int count = 0, wordCount = 0;
         long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 5000) {
+        for (int i = 0; i < 1000; i++)
             solver.getAllValidWords(board);
-            count++;
-        }
+        long endTime = System.currentTimeMillis();
+        long timeElapsed = endTime - startTime;
         Iterable<String> res = solver.getAllValidWords(board);
 
-        int score = 0;
+        int score = 0, wordCount = 0;
         for (String word : res) {
             StdOut.println("word " + word);
             score += solver.scoreOf(word);
             wordCount++;
         }
-        System.out.println("Calls per second: " + count / 5);
+        System.out.println("Time: " + timeElapsed);
+
         StdOut.println("Score = " + score + " Word count = " + wordCount);
+        // int count = 0, wordCount = 0;
+        // long startTime = System.currentTimeMillis();
+        // while (System.currentTimeMillis() - startTime < 5000) {
+        // solver.getAllValidWords(board);
+        // count++;
+        // }
+        // Iterable<String> res = solver.getAllValidWords(board);
+
+        // int score = 0;
+        // for (String word : res) {
+        // StdOut.println("word " + word);
+        // score += solver.scoreOf(word);
+        // wordCount++;
+        // }
+        // System.out.println("Calls per second: " + count / 5);
+        // StdOut.println("Score = " + score + " Word count = " + wordCount);
     }
 }

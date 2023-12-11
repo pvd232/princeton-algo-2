@@ -16,7 +16,8 @@ public class R2Trie<Value> {
         if (root.next[pre(key, false)] == null && key.length() > 1)
             root.next[pre(key, false)] = new TrieST();
         if (key.length() > 2)
-            root.next[pre(key, false)].put(key, key);
+            root.next[pre(key, false)].put(key, key,
+                    Character.toString(key.charAt(0)) + Character.toString(key.charAt(1)));
     }
 
     private int pre(String key, boolean first) {
