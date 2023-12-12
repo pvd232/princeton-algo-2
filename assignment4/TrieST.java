@@ -1,14 +1,16 @@
+import java.util.HashSet;
+
 import edu.princeton.cs.algs4.Queue;
-import edu.princeton.cs.algs4.Stack;
 
 public class TrieST {
     private static final int R = 26;
     private Node root = new Node();
-    private Stack<Node> path = new Stack<>();
+    private Node prev;
 
     private static class Node {
         private String val;
         private String path;
+        private boolean isParent;
         private final Node[] next = new Node[R];
     }
 
@@ -21,20 +23,23 @@ public class TrieST {
             x = new Node();
 
         if (d == key.length()) {
-            x.val = key;
+            if (key.length() > 2)
+                x.val = key;
             x.path = key;
             return x;
-        }
+        } else
+            x.isParent = true;
         char c = key.charAt(d);
         if (x.path == null)
             x.path = key.substring(0, d);
+
         x.next[Character.getNumericValue(c) - 10] = put(x.next[Character.getNumericValue(c) - 10], key, d + 1);
         return x;
     }
 
     public String get(String key) {
-        // if (prev != null && key.equals(prev.path))
-        // return prev.val;
+        if (prev != null && key.equals(prev.path))
+            return prev.val;
         Node x = get(root, key, 0);
         if (x == null)
             return null;
@@ -70,42 +75,36 @@ public class TrieST {
         return get(key) != null;
     }
 
-    private Node cached() {
-        if (path.isEmpty())
-            return null;
+    private Node cached(String old) {
+        if (prev != null && old.equals(prev.path))
+            return prev;
         else
-            return path.peek();
+            return null;
     }
 
     public String prefix(String old, char c) {
-        Node x;
-        if (path.isEmpty())
+        Node x = cached(old);
+        if (x == null)
             x = get(root, old, 0, c);
         else
-            x = get(path.peek(), old, old.length(), c);
-        // if (x == null)
-        // x = get(root, old, 0, c);
-        // else
+            x = get(x, old, old.length(), c);
 
         if (x == null)
             return null;
         else {
-            path.push(x);
-            // prev = x;
+            prev = x;
             return x.path;
         }
-
     }
 
-    public void remove() {
-        // System.out.println(path.size());
-        // assert path.size() > 0;
-        path.pop();
-    }
-
-    public void reset() {
-        while (path.size() > 1)
-            path.pop();
+    // Node will always exist
+    public boolean hasKids(String key, HashSet<String> res) {
+        Node x = cached(key);
+        if (x == null)
+            x = get(root, key, 0);
+        if (x.val != null)
+            res.add(key);
+        return x.isParent;
     }
 
     public Iterable<String> keys() {
