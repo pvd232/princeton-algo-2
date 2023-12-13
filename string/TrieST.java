@@ -31,6 +31,7 @@ public class TrieST {
             return x;
         } else
             x.isParent = true;
+
         char c = key.charAt(d);
         if (x.path == null)
             x.path = key.substring(0, d);

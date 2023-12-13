@@ -47,20 +47,20 @@ public class BoggleSolver {
     }
 
     private int[] adjN(int i, int j) {
-        int len = 1;
         boolean rowIsEdge = false, colIsEdge = false;
         if (i == 0 || i == m - 1)
             rowIsEdge = true;
         if (j == 0 || j == n - 1)
             colIsEdge = true;
 
-        if (rowIsEdge && colIsEdge)
+        int len = 1;
+        if (!rowIsEdge && !colIsEdge) // n & m must be > 1 for non edge point to exist, must have 8 adjacencies
+            len = 8;
+        else if (rowIsEdge && colIsEdge)
             if (m > 1 && n > 1)
                 len = 3;
             else
                 len = 1;
-        else if (!rowIsEdge && !colIsEdge)
-            len = 8;
         else if (m > 2 && n > 2)
             len = 5;
         else if (m == 1 || n == 1)
@@ -68,25 +68,52 @@ public class BoggleSolver {
 
         int count = 0;
         int[] dir = { 1, -1 }, res = new int[len];
-        if (n > 1)
-            for (int dx : dir) {
-                int adjX = j + dx;
-                if (adjX < n && adjX > -1)
-                    res[count++] = i * n + adjX;
-            }
-        if (m > 1)
-            for (int dy : dir) {
-                int adjY = i + dy;
-                if (adjY < m && adjY > -1)
-                    res[count++] = adjY * n + j;
-            }
-        if (m > 1 || n > 1)
-            for (int dy : dir)
-                for (int dx : dir) {
-                    int adjY = i + dy, adjX = j + dx;
-                    if (adjX < n && adjX > -1 && adjY < m && adjY > -1)
-                        res[count++] = adjY * n + adjX;
-                }
+
+        // Diagonal
+        if (m > 1 && n > 1)
+            if (!rowIsEdge && !colIsEdge)
+                for (int dy : dir)
+                    for (int dx : dir)
+                        res[count++] = (i + dy) * n + (j + dx);
+            else if (rowIsEdge && !colIsEdge)
+                for (int dx : dir)
+                    if (i == 0)
+                        res[count++] = (i + 1) * n + (j + dx);
+                    else
+                        res[count++] = (i - 1) * n + (j + dx);
+
+            else if (!rowIsEdge && colIsEdge)
+                for (int dy : dir)
+                    if (j == 0)
+                        res[count++] = (i + dy) * n + (j + 1);
+                    else
+                        res[count++] = (i + dy) * n + (j - 1);
+            else if (i == 0 && j == 0)
+                res[count++] = (i + 1) * n + (j + 1);
+            else if (i == 0 && j == n - 1)
+                res[count++] = (i + 1) * n + (j - 1);
+            else if (i == m - 1 && j == 0)
+                res[count++] = (i - 1) * n + (j + 1);
+            else if (i == m - 1 && j == n - 1)
+                res[count++] = (i - 1) * n + (j - 1);
+
+        if (n > 1) // Col
+            if (!colIsEdge)
+                for (int dx : dir)
+                    res[count++] = (i * n) + (j + dx);
+            else if (j == n - 1)
+                res[count++] = (i * n) + (j - 1);
+            else if (j == 0)
+                res[count++] = (i * n) + (j + 1);
+
+        if (m > 1) // Row
+            if (!rowIsEdge)
+                for (int dy : dir)
+                    res[count++] = n * (i + dy) + j;
+            else if (i == m - 1)
+                res[count++] = n * (i - 1) + j;
+            else if (i == 0)
+                res[count++] = n * (i + 1) + j;
         return res;
     }
 
@@ -145,7 +172,7 @@ public class BoggleSolver {
         BoggleSolver solver = new BoggleSolver(dictionary);
         int count = 0;
         long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 5000) {
+        while (System.currentTimeMillis() - startTime < 10000) {
             BoggleBoard board = new BoggleBoard();
             solver.getAllValidWords(board);
             count++;
