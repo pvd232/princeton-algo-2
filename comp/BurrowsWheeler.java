@@ -9,8 +9,10 @@ public class BurrowsWheeler {
     // reading from standard input and writing to standard output
     public static void transform() {
         while (!BinaryStdIn.isEmpty()) {
-
+            String s = BinaryStdIn.readString();
+            BinaryStdOut.write(s);
         }
+        BinaryStdOut.flush();
     }
 
     // apply Burrows-Wheeler inverse transform,
@@ -23,6 +25,7 @@ public class BurrowsWheeler {
     // if args[0] is "+", apply Burrows-Wheeler inverse transform
     public static void main(String[] args) {
 
+        BurrowsWheeler.transform();
     }
 
 }
