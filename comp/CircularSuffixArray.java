@@ -4,30 +4,14 @@ import edu.princeton.cs.algs4.In;
 
 public class CircularSuffixArray {
     private final String s;
-    private CircularSuffix[] t;
+    private final CircularSuffix[] t;
 
-    private class CircularSuffix {
+    private static class CircularSuffix {
         private final int start;
 
         private CircularSuffix(int start) {
             this.start = start;
         }
-
-        // // Slow but clean impl -> might swap with implicit comparison later
-        // // Also might need to implement more efficient suffix sorting -> TBD
-        // public int compareTo(CircularSuffix that) {
-        // return compareTo(that, 0);
-        // }
-
-        // private int compareTo(CircularSuffix that, int i) {
-        // if (i == s.length())
-        // return 0;
-        // if (s.charAt(start + i) > s.charAt(that.start + i))
-        // return 1;
-        // else if (s.charAt(start + i) < s.charAt(that.start + i))
-        // return -1;
-        // return compareTo(that, i + 1);
-        // }
     }
 
     private static class TWSQS {
@@ -100,14 +84,41 @@ public class CircularSuffixArray {
     // unit testing (required)
     public static void main(String[] args) {
         In in = new In(args[0]);
-        CircularSuffixArray csa = new CircularSuffixArray(in.readAll());
-        for (CircularSuffix cs : csa.t) {
-            String str = csa.s.substring(cs.start, csa.length());
-            System.out.println(str);
+        String input = in.readAll();
+        CircularSuffixArray csa = new CircularSuffixArray(input);
+
+        String[] suffix = new String[input.length()];
+        for (int i = 0; i < input.length(); i++) {
+            String newSuffix = input.substring(i, input.length()) + input.substring(0, i);
+            suffix[i] = newSuffix;
         }
-        assert csa.index(0) == 11;
-        assert csa.index(11) == 2;
-        assert csa.index(1) == 10;
-        assert csa.index(2) == 7;
+
+        int count = 0;
+        String curr = "";
+        String[] sortedSuff = new String[csa.s.length()];
+        for (CircularSuffix cs : csa.t) {
+            String prev = curr;
+            curr = csa.s.substring(cs.start, csa.s.length()) + csa.s.substring(0, cs.start);
+            sortedSuff[count++] = curr;
+
+            int i = 0;
+            if (!prev.equals("")) {
+                while (curr.charAt(i) == prev.charAt(i))
+                    i++;
+
+                // Ensure propery sorting
+                assert curr.charAt(i) > prev.charAt(i) || i == curr.length();
+            }
+        }
+        assert count == csa.s.length();
+
+        for (int i = 0; i < sortedSuff.length; i++) {
+            // Original suffix
+            String originalSuffix = suffix[csa.index(i)];
+            // Sorted suffix
+            String sortedSuffix = sortedSuff[i];
+            // Should always be equal
+            assert originalSuffix.equals(sortedSuffix);
+        }
     }
 }
