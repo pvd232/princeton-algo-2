@@ -4,8 +4,7 @@ import edu.princeton.cs.algs4.BinaryStdIn;
 import edu.princeton.cs.algs4.BinaryStdOut;
 
 public class MoveToFront {
-    // apply move-to-front encoding, reading from standard input and writing to
-    // standard output
+    // Applies move-to-front encoding and reads to StdOut
     public static void encode() {
         int[] chars = new int[256];
         for (int i = 0; i < chars.length; i++)
@@ -28,28 +27,8 @@ public class MoveToFront {
         }
         BinaryStdOut.flush();
     }
-    // old method, required traversing through entire chars array
-    // public static void encode() {
-    // int[] chars = new int[256];
-    // for (int i = 0; i < chars.length; i++)
-    // chars[i] = i;
-    // while (!BinaryStdIn.isEmpty()) {
-    // char c = BinaryStdIn.readChar();
-    // BinaryStdOut.write((char) chars[c]);
 
-    // int i = 0;
-    // while (i < chars.length) {
-    // if (chars[i] < chars[c])
-    // chars[i] = chars[i] + 1;
-    // i++;
-    // }
-    // chars[c] = 0;
-    // }
-    // BinaryStdOut.flush();
-    // }
-
-    // apply move-to-front decoding, reading from standard input and writing to
-    // standard output
+    // Applies move-to-front decoding and writes to StdOut
     public static void decode() {
     }
 
