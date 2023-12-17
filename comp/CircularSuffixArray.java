@@ -63,9 +63,8 @@ public class CircularSuffixArray {
         t = new CircularSuffix[s.length()];
         this.s = s;
 
-        int i = 0;
-        while (i < s.length())
-            t[i] = new CircularSuffix(i++);
+        for (int i = 0; i < length(); i++)
+            t[i] = new CircularSuffix(i);
         TWSQS.sort(t, s);
     }
 

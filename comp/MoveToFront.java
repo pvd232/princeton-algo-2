@@ -11,18 +11,13 @@ public class MoveToFront {
             chars[i] = i;
         while (!BinaryStdIn.isEmpty()) {
             char c = BinaryStdIn.readChar();
-            int idx = 0, prev = chars[idx], curr = chars[idx + 1];
-            if (prev != c)
-                for (int i = 1; i < chars.length; i++) {
-                    curr = chars[i];
-                    chars[i] = prev;
-                    prev = curr;
-                    if (prev == c) {
-                        idx = i;
-                        break;
-                    }
-                }
-            BinaryStdOut.write((char) idx);
+            int i = 0, prev = chars[i], curr = chars[i + 1];
+            while (prev != c) {
+                curr = chars[i];
+                chars[i++] = prev;
+                prev = curr;
+            }
+            BinaryStdOut.write((char) (i - 1));
             chars[0] = c;
         }
         BinaryStdOut.flush();
@@ -30,10 +25,24 @@ public class MoveToFront {
 
     // Applies move-to-front decoding and writes to StdOut
     public static void decode() {
+        int[] chars = new int[256];
+        for (int i = 0; i < chars.length; i++)
+            chars[i] = i;
+        while (!BinaryStdIn.isEmpty()) {
+            char c = BinaryStdIn.readChar();
+            int res = chars[c];
+            BinaryStdOut.write(res);
+            int prev = chars[0], curr = chars[1];
+            for (int i = 0; i <= c; i++) {
+                curr = chars[i];
+                chars[i] = prev;
+                prev = curr;
+            }
+            chars[0] = res;
+            BinaryStdOut.flush();
+        }
     }
 
-    // if args[0] is "-", apply move-to-front encoding
-    // if args[0] is "+", apply move-to-front decoding
     public static void main(String[] args) {
         if (args[0].equals("-"))
             encode();
