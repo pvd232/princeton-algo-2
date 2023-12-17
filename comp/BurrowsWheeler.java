@@ -6,7 +6,7 @@ import edu.princeton.cs.algs4.BinaryStdIn;
 import edu.princeton.cs.algs4.BinaryStdOut;
 
 public class BurrowsWheeler {
-    private static int r = 126;
+    private static int r = 256;
 
     public static void transform() {
         StringBuilder res = new StringBuilder();
@@ -33,35 +33,38 @@ public class BurrowsWheeler {
         return s.charAt(i - 1);
     }
 
+    private static int[][] count(char[] msg) {
+        int[] count = new int[r];
+        int[][] res = new int[r][];
+        for (int i = 0; i < msg.length; i++)
+            count[msg[i]]++;
+        for (int i = 0; i < r; i++)
+            count[i + 1] += count[i];
+        for (int i = 0; i < res.length; i++)
+            res[i] = new int[count[i]];
+        return res;
+    }
+
     public static void inverseTransform() {
+        StringBuilder res = new StringBuilder();
         while (!BinaryStdIn.isEmpty()) {
             int first = BinaryStdIn.readInt();
             char[] msg = BinaryStdIn.readString().toCharArray(), sorted = msg.clone();
             Arrays.sort(sorted);
 
-            int[] next = new int[msg.length], msgCount = new int[r], sortedCount = new int[r], lastSeen = new int[r];
-            for (int i = 0; i < next.length; i++) {
-                char c = sorted[i];
-                sortedCount[c]++; // Increment the char count for the input string
-                while (sortedCount[c] != msgCount[c]) { // While the char count of sorted != message char count
-                    int j = lastSeen[c]; // j will start at the last visited index + 1 for the corresponding char
-                    while (msg[j] != c) // Increment to find matching char in msg
-                        j++;
-                    msgCount[c]++; // Increment msg char count after we find a matching char
-                    lastSeen[c] = j++; // Update last seen index and increment j past current match
-                }
-                next[i] = lastSeen[c]++; // Increment last seen after the match is found for j
-                msgCount[c] = 0; // Reset char count index for msg
-            }
-            StringBuilder res = new StringBuilder();
+            int[] next = new int[msg.length], sortedCount = new int[r];
+            int[][] msgCharCount = count(msg);
+
+            for (int i = 0; i < next.length; i++)
+                next[i] = msgCharCount[sorted[i]][sortedCount[sorted[i]]++];
+
             while (res.length() < msg.length) {
                 res.append(msg[next[first]]);
                 first = next[first];
             }
-            BinaryStdOut.write(res.toString());
-            BinaryStdOut.write('\n');
-            BinaryStdOut.flush();
         }
+        BinaryStdOut.write(res.toString());
+        BinaryStdOut.flush();
     }
 
     public static void main(String[] args) {

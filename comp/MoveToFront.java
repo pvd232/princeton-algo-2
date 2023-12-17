@@ -4,9 +4,11 @@ import edu.princeton.cs.algs4.BinaryStdIn;
 import edu.princeton.cs.algs4.BinaryStdOut;
 
 public class MoveToFront {
+    private static int r = 256;
+
     // Applies move-to-front encoding and reads to StdOut
     public static void encode() {
-        int[] chars = new int[256];
+        int[] chars = new int[r];
         for (int i = 0; i < chars.length; i++)
             chars[i] = i;
         while (!BinaryStdIn.isEmpty()) {
@@ -17,7 +19,7 @@ public class MoveToFront {
                 chars[i++] = prev;
                 prev = curr;
             }
-            BinaryStdOut.write((char) (i - 1));
+            BinaryStdOut.write((char) Math.max(0, i - 1));
             chars[0] = c;
         }
         BinaryStdOut.flush();
@@ -25,7 +27,7 @@ public class MoveToFront {
 
     // Applies move-to-front decoding and writes to StdOut
     public static void decode() {
-        int[] chars = new int[256];
+        int[] chars = new int[r];
         for (int i = 0; i < chars.length; i++)
             chars[i] = i;
         while (!BinaryStdIn.isEmpty()) {
@@ -39,8 +41,8 @@ public class MoveToFront {
                 prev = curr;
             }
             chars[0] = res;
-            BinaryStdOut.flush();
         }
+        BinaryStdOut.flush();
     }
 
     public static void main(String[] args) {
