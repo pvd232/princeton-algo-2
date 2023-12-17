@@ -1,5 +1,6 @@
 package comp;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.princeton.cs.algs4.BinaryStdIn;
@@ -33,15 +34,13 @@ public class BurrowsWheeler {
         return s.charAt(i - 1);
     }
 
-    private static int[][] count(char[] msg) {
-        int[] count = new int[r];
-        int[][] res = new int[r][];
-        for (int i = 0; i < msg.length; i++)
-            count[msg[i]]++;
+    private static ArrayList<ArrayList<Integer>> count(char[] msg) {
+        ArrayList<ArrayList<Integer>> res = new ArrayList<>(r);
         for (int i = 0; i < r; i++)
-            count[i + 1] += count[i];
-        for (int i = 0; i < res.length; i++)
-            res[i] = new int[count[i]];
+            res.add(new ArrayList<>(msg.length / r));
+
+        for (int i = 0; i < msg.length; i++)
+            res.get(msg[i]).add(i);
         return res;
     }
 
@@ -53,10 +52,10 @@ public class BurrowsWheeler {
             Arrays.sort(sorted);
 
             int[] next = new int[msg.length], sortedCount = new int[r];
-            int[][] msgCharCount = count(msg);
+            ArrayList<ArrayList<Integer>> msgCharCount = count(msg);
 
             for (int i = 0; i < next.length; i++)
-                next[i] = msgCharCount[sorted[i]][sortedCount[sorted[i]]++];
+                next[i] = msgCharCount.get(sorted[i]).get(sortedCount[sorted[i]]++);
 
             while (res.length() < msg.length) {
                 res.append(msg[next[first]]);
