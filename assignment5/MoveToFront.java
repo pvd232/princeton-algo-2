@@ -1,5 +1,3 @@
-package comp;
-
 import edu.princeton.cs.algs4.BinaryStdIn;
 import edu.princeton.cs.algs4.BinaryStdOut;
 
@@ -33,7 +31,7 @@ public class MoveToFront {
         while (!BinaryStdIn.isEmpty()) {
             char c = BinaryStdIn.readChar();
             int res = chars[c];
-            BinaryStdOut.write((char) res);
+            BinaryStdOut.write(res);
             int prev = chars[0], curr = chars[1];
             for (int i = 0; i <= c; i++) {
                 curr = chars[i];

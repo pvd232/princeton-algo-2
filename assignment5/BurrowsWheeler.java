@@ -46,7 +46,6 @@ public class BurrowsWheeler {
 
     public static void inverseTransform() {
         StringBuilder res = new StringBuilder();
-
         while (!BinaryStdIn.isEmpty()) {
             int first = BinaryStdIn.readInt();
             char[] msg = BinaryStdIn.readString().toCharArray(), sorted = msg.clone();
@@ -57,11 +56,10 @@ public class BurrowsWheeler {
 
             for (int i = 0; i < next.length; i++)
                 next[i] = msgCharCount.get(sorted[i]).get(sortedCount[sorted[i]]++);
-            int i = 0;
-            while (i < msg.length) {
-                res.append(sorted[first]);
+
+            while (res.length() < msg.length) {
+                res.append(msg[next[first]]);
                 first = next[first];
-                i++;
             }
         }
         BinaryStdOut.write(res.toString());
