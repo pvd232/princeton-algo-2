@@ -4,6 +4,7 @@ import edu.princeton.cs.algs4.In;
 
 public class CircularSuffixArray {
     private final String s;
+    private final int n;
     private final CircularSuffix[] t;
 
     private static class CircularSuffix {
@@ -15,7 +16,7 @@ public class CircularSuffixArray {
     }
 
     private static class TWSQS {
-        private static void sort(CircularSuffix[] a, String s) {
+        public static void sort(CircularSuffix[] a, String s) {
             sort(a, 0, a.length - 1, 0, s);
         }
 
@@ -48,10 +49,14 @@ public class CircularSuffixArray {
         }
 
         private static int charAt(CircularSuffix cir, int d, String s) {
+            int len = s.length();
             int i = d + cir.start;
-            if (i < s.length())
+            if (i < len)
                 return s.charAt(i);
-            return s.charAt(i % s.length());
+            else if (i % len == cir.start) // For periodic string must ensure no infinite loop
+                return -1;
+            else
+                return s.charAt(i % len);
         }
     }
 
@@ -60,22 +65,23 @@ public class CircularSuffixArray {
         if (s == null)
             throw new IllegalArgumentException();
 
-        t = new CircularSuffix[s.length()];
         this.s = s;
+        n = s.length();
+        t = new CircularSuffix[n];
 
-        for (int i = 0; i < length(); i++)
+        for (int i = 0; i < n; i++)
             t[i] = new CircularSuffix(i);
         TWSQS.sort(t, s);
     }
 
     // length of s
     public int length() {
-        return s.length();
+        return n;
     }
 
     // returns index of ith sorted suffix
     public int index(int i) {
-        if (i < 0 || i >= s.length())
+        if (i < 0 || i >= n)
             throw new IllegalArgumentException();
         return t[i].start;
     }
@@ -102,11 +108,12 @@ public class CircularSuffixArray {
 
             int i = 0;
             if (!prev.equals("")) {
-                while (curr.charAt(i) == prev.charAt(i))
+                while (i < curr.length() && curr.charAt(i) == prev.charAt(i))
                     i++;
 
-                // Ensure propery sorting
-                assert curr.charAt(i) > prev.charAt(i) || i == curr.length();
+                // Ensure proper sorting
+                if (i < curr.length())
+                    assert curr.charAt(i) > prev.charAt(i);
             }
         }
         assert count == csa.s.length();

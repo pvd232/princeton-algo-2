@@ -1,29 +1,26 @@
-package comp;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import edu.princeton.cs.algs4.BinaryStdIn;
 import edu.princeton.cs.algs4.BinaryStdOut;
 
 public class BurrowsWheeler {
-    private static int r = 256;
+    private static final int R = 256;
 
     public static void transform() {
-        StringBuilder res = new StringBuilder();
-        int start = 0;
         while (!BinaryStdIn.isEmpty()) {
+            int start = 0;
             String s = BinaryStdIn.readString();
+            char[] res = new char[s.length()];
             CircularSuffixArray cs = new CircularSuffixArray(s);
+
             for (int i = 0; i < cs.length(); i++) {
                 int ogIdx = cs.index(i);
+                res[i] = end(ogIdx, s);
                 if (ogIdx == 0)
                     start = i;
-                res.append(end(ogIdx, s));
             }
+            BinaryStdOut.write(start);
+            for (char c : res)
+                BinaryStdOut.write(c);
         }
-        BinaryStdOut.write(start);
-        BinaryStdOut.write(res.toString());
         BinaryStdOut.flush();
     }
 
@@ -34,35 +31,33 @@ public class BurrowsWheeler {
         return s.charAt(i - 1);
     }
 
-    private static ArrayList<ArrayList<Integer>> count(char[] msg) {
-        ArrayList<ArrayList<Integer>> res = new ArrayList<>(r);
-        for (int i = 0; i < r; i++)
-            res.add(new ArrayList<>(msg.length / r));
-
+    private static int[][] charCount(char[] msg) {
+        int[] currCount = new int[R];
+        int[][] res = new int[R][];
         for (int i = 0; i < msg.length; i++)
-            res.get(msg[i]).add(i);
+            currCount[msg[i]]++;
+        for (int i = 0; i < res.length; i++)
+            res[i] = new int[currCount[i]];
+        for (int i = 0; i < msg.length; i++)
+            res[msg[i]][res[msg[i]].length - currCount[msg[i]]--] = i;
         return res;
     }
 
     public static void inverseTransform() {
-        StringBuilder res = new StringBuilder();
         while (!BinaryStdIn.isEmpty()) {
             int first = BinaryStdIn.readInt();
             char[] msg = BinaryStdIn.readString().toCharArray(), sorted = msg.clone();
-            Arrays.sort(sorted);
 
-            int[] next = new int[msg.length], sortedCount = new int[r];
-            ArrayList<ArrayList<Integer>> msgCharCount = count(msg);
+            KeyIndexCount.sort(sorted);
+            int[] next = new int[msg.length], sortedCount = new int[R];
+            int[][] charCount = charCount(msg);
 
             for (int i = 0; i < next.length; i++)
-                next[i] = msgCharCount.get(sorted[i]).get(sortedCount[sorted[i]]++);
-
-            while (res.length() < msg.length) {
-                res.append(msg[next[first]]);
-                first = next[first];
-            }
+                next[i] = charCount[sorted[i]][sortedCount[sorted[i]]++];
+            BinaryStdOut.write(sorted[first]);
+            for (int i = next[first]; i != first; i = next[i])
+                BinaryStdOut.write(sorted[i]);
         }
-        BinaryStdOut.write(res.toString());
         BinaryStdOut.flush();
     }
 
