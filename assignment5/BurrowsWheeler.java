@@ -31,6 +31,7 @@ public class BurrowsWheeler {
         return s.charAt(i - 1);
     }
 
+    // Get the key-indexed index for each char in msg
     private static int[][] charCount(char[] msg) {
         int[] currCount = new int[R];
         int[][] res = new int[R][];
@@ -39,6 +40,7 @@ public class BurrowsWheeler {
         for (int i = 0; i < res.length; i++)
             res[i] = new int[currCount[i]];
         for (int i = 0; i < msg.length; i++)
+            // Decrement currCount[msg[i]]to track the char being assigned the index
             res[msg[i]][res[msg[i]].length - currCount[msg[i]]--] = i;
         return res;
     }
@@ -54,9 +56,14 @@ public class BurrowsWheeler {
 
             for (int i = 0; i < next.length; i++)
                 next[i] = charCount[sorted[i]][sortedCount[sorted[i]]++];
-            BinaryStdOut.write(sorted[first]);
-            for (int i = next[first]; i != first; i = next[i])
-                BinaryStdOut.write(sorted[i]);
+
+            int cnt = 0;
+            // Guard against periodic / unary msg using cnt tracker
+            while (cnt < next.length) {
+                cnt++;
+                BinaryStdOut.write(sorted[first]);
+                first = next[first];
+            }
         }
         BinaryStdOut.flush();
     }

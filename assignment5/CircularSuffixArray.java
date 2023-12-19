@@ -3,30 +3,22 @@ import edu.princeton.cs.algs4.In;
 public class CircularSuffixArray {
     private final String s;
     private final int n;
-    private final CircularSuffix[] t;
-
-    private static class CircularSuffix {
-        private final int start;
-
-        private CircularSuffix(int start) {
-            this.start = start;
-        }
-    }
+    private final int[] t;
 
     private static class TWSQS {
-        public static void sort(CircularSuffix[] a, String s) {
-            sort(a, 0, a.length - 1, 0, s);
+        public static void sort(int[] a, String s) {
+            sort(a, 0, a.length - 1, 0, s, s.length());
         }
 
-        private static void sort(CircularSuffix[] a, int lo, int hi, int d, String s) {
+        private static void sort(int[] a, int lo, int hi, int d, String s, int n) {
             if (hi <= lo)
                 return;
             int lt = lo, gt = hi;
-            int v = charAt(a[lo], d, s);
+            int v = charAt(a[lo], d, s, n);
             int i = lo + 1;
             while (i <= gt) {
                 // 3-way partitioning (using dth character) to handle variable-length strings
-                int t = charAt(a[i], d, s);
+                int t = charAt(a[i], d, s, n);
                 if (t < v)
                     exch(a, lt++, i++);
                 else if (t > v)
@@ -34,27 +26,26 @@ public class CircularSuffixArray {
                 else
                     i++;
             }
-            sort(a, lo, lt - 1, d, s);
+            sort(a, lo, lt - 1, d, s, n);
             if (v >= 0)
-                sort(a, lt, gt, d + 1, s);
-            sort(a, gt + 1, hi, d, s);
+                sort(a, lt, gt, d + 1, s, n);
+            sort(a, gt + 1, hi, d, s, n);
         }
 
-        private static void exch(CircularSuffix[] a, int i, int j) {
-            CircularSuffix tmp = a[i];
+        private static void exch(int[] a, int i, int j) {
+            int tmp = a[i];
             a[i] = a[j];
             a[j] = tmp;
         }
 
-        private static int charAt(CircularSuffix cir, int d, String s) {
-            int len = s.length();
-            int i = d + cir.start;
-            if (i < len)
+        private static int charAt(int start, int d, String s, int n) {
+            int i = d + start;
+            if (i < n)
                 return s.charAt(i);
-            else if (i % len == cir.start) // For periodic string must ensure no infinite loop
+            else if (i % n == start) // For periodic string must ensure no infinite loop
                 return -1;
             else
-                return s.charAt(i % len);
+                return s.charAt(i % n);
         }
     }
 
@@ -65,10 +56,10 @@ public class CircularSuffixArray {
 
         this.s = s;
         n = s.length();
-        t = new CircularSuffix[n];
+        t = new int[n];
 
         for (int i = 0; i < n; i++)
-            t[i] = new CircularSuffix(i);
+            t[i] = i;
         TWSQS.sort(t, s);
     }
 
@@ -81,7 +72,7 @@ public class CircularSuffixArray {
     public int index(int i) {
         if (i < 0 || i >= n)
             throw new IllegalArgumentException();
-        return t[i].start;
+        return t[i];
     }
 
     // unit testing (required)
@@ -99,9 +90,9 @@ public class CircularSuffixArray {
         int count = 0;
         String curr = "";
         String[] sortedSuff = new String[csa.s.length()];
-        for (CircularSuffix cs : csa.t) {
+        for (int cs : csa.t) {
             String prev = curr;
-            curr = csa.s.substring(cs.start, csa.s.length()) + csa.s.substring(0, cs.start);
+            curr = csa.s.substring(cs, csa.s.length()) + csa.s.substring(0, cs);
             sortedSuff[count++] = curr;
 
             int i = 0;
