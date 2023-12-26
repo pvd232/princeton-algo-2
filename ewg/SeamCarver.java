@@ -4,8 +4,8 @@ import edu.princeton.cs.algs4.Picture;
 
 public class SeamCarver {
     private static final int[] DIR = { -1, 0, 1 };
-    private Picture pic;
     private final int[][] colors;
+    // private final double[][] energies;
     private int pHeight;
     private int pWidth;
 
@@ -13,10 +13,11 @@ public class SeamCarver {
     public SeamCarver(Picture picture) {
         if (picture == null)
             throw new IllegalArgumentException();
-        pic = new Picture(picture);
+        Picture pic = new Picture(picture);
         pHeight = pic.height();
         pWidth = pic.width();
         colors = new int[pHeight][pWidth];
+        // energies = new double[pHeight][pWidth];
         for (int i = 0; i < pHeight; i++)
             for (int j = 0; j < pWidth; j++)
                 colors[i][j] = pic.getRGB(j, i);
@@ -64,14 +65,6 @@ public class SeamCarver {
 
     private double gradientSq(int x1, int y1, int x2, int y2) {
         int c1 = colors[y1][x1], c2 = colors[y2][x2];
-        if (c1 == 0) { // If no cached value, update
-            c1 = pic.getRGB(x1, y1);
-            colors[y1][x1] = c1;
-        }
-        if (c2 == 0) {
-            c2 = pic.getRGB(x2, y2);
-            colors[y2][x2] = c2;
-        }
         // bit shift to extract RGB values from binary encoding of the int RGB value
         int r1 = (c1 >> 16) & 0xff, g1 = (c1 >> 8) & 0xff, b1 = c1 & 0xff;
         int r2 = (c2 >> 16) & 0xff, g2 = (c2 >> 8) & 0xff, b2 = c2 & 0xff;
@@ -185,10 +178,8 @@ public class SeamCarver {
             throw new IllegalArgumentException();
         pHeight = pHeight - 1;
         for (int i = 0; i < pWidth; i++)
-            for (int j = seam[i]; j < pHeight; j++) {
-                pic.setRGB(i, j, colors[j + 1][i]);
+            for (int j = seam[i]; j < pHeight; j++)
                 colors[j][i] = colors[j + 1][i];
-            }
     }
 
     // Remove vertical seam from current picture
@@ -197,12 +188,24 @@ public class SeamCarver {
             throw new IllegalArgumentException();
         pWidth = pWidth - 1;
         for (int i = 0; i < pHeight; i++) {
-            for (int j = seam[i]; j < pWidth; j++) {
-                pic.setRGB(j, i, colors[i][j + 1]);
+            for (int j = seam[i]; j < pWidth; j++)
                 colors[i][j] = colors[i][j + 1];
-            }
         }
     }
+
+    // private void updateGrad(int x, int y, boolean vertical) {
+    // if (vertical) {
+    // if (x < pWidth && x >= 0 && y >= 0 && y < pHeight)
+    // energies[y][x] = energy(x, y, false);
+    // if (x - 1 < pWidth && x - 1 >= 0 && y >= 0 && y < pHeight)
+    // energies[y][x - 1] = energy(x - 1, y, false);
+    // } else {
+    // if (x < pWidth && x >= 0 && y >= 0 && y < pHeight)
+    // energies[y][x] = energy(x, y, false);
+    // if (x < pWidth && x >= 0 && y - 1 >= 0 && y - 1 < pHeight)
+    // energies[y - 1][x] = energy(x, y - 1, false);
+    // }
+    // }
 
     // Unit testing (optional)
     public static void main(String[] args) {
