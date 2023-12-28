@@ -3,7 +3,7 @@ import edu.princeton.cs.algs4.Picture;
 public class SeamCarver {
     private static final int[] DIR = { -1, 0, 1 };
     private final int[][] colors;
-    private final double[][] test;
+    private final double[][] energies;
     private int pHeight;
     private int pWidth;
 
@@ -15,10 +15,14 @@ public class SeamCarver {
         pHeight = pic.height();
         pWidth = pic.width();
         colors = new int[pHeight][pWidth];
-        test = new double[pHeight][pWidth];
-        for (int i = 0; i < pHeight; i++)
-            for (int j = 0; j < pWidth; j++)
-                colors[i][j] = pic.getRGB(j, i);
+        energies = new double[pHeight][pWidth];
+        for (int i = 0; i < pHeight + 2; i++)
+            for (int j = 0; j < pWidth; j++) {
+                if (i < pHeight)
+                    colors[i][j] = pic.getRGB(j, i);
+                if (i >= 2)
+                    energies[i - 2][j] = energy(j, i - 2);
+            }
     }
 
     // Current picture
@@ -41,24 +45,23 @@ public class SeamCarver {
     }
 
     public double energy(int x, int y) {
-        return energy(x, y, null);
+        return energy(x, y, false);
     }
 
     // Energy of pixel at column x and row y
-    private double energy(int x, int y, double[][] energyCache) {
+    private double energy(int x, int y, boolean useCache) {
         if (x < 0 || x >= pWidth || y < 0 || y >= pHeight)
             throw new IllegalArgumentException();
         else if (x == 0 || x == pWidth - 1 || y == 0 || y == pHeight - 1)
             return 1000;
 
-        if (energyCache == null || energyCache[y][x] == 0.0) {
+        if (!useCache) {
             double xGrad = gradientSq(x + 1, y, x - 1, y), yGrad = gradientSq(x, y + 1, x, y - 1);
             double grad = Math.sqrt(xGrad + yGrad);
-            if (energyCache != null)
-                energyCache[y][x] = grad;
+            energies[y][x] = grad;
             return grad;
         } else
-            return energyCache[y][x];
+            return energies[y][x];
     }
 
     private double gradientSq(int x1, int y1, int x2, int y2) {
@@ -94,7 +97,7 @@ public class SeamCarver {
 
     private int[] sp(int bound, int other, boolean vertical) {
         int[][] edgeTo = new int[pHeight + 1][pWidth];
-        double[][] distTo = new double[pHeight + 1][pWidth], energyCache = new double[pHeight][pWidth];
+        double[][] distTo = new double[pHeight + 1][pWidth];
         for (int i = 0; i < other; i++)
             if (vertical) {
                 edgeTo[0][i] = i;
@@ -107,23 +110,23 @@ public class SeamCarver {
             for (int j = 1; j < other - 1; j++)
                 if (i == bound - 1) // vBottom
                     if (vertical)
-                        relax(j, i, 0, pHeight, distTo, edgeTo, energyCache, vertical);
+                        relax(j, i, 0, pHeight, distTo, edgeTo, vertical);
                     else
-                        relax(i, j, 0, pHeight, distTo, edgeTo, energyCache, vertical);
+                        relax(i, j, 0, pHeight, distTo, edgeTo, vertical);
                 else if (vertical)
                     for (int r : adj(j, i, vertical))
-                        relax(j, i, r, i + 1, distTo, edgeTo, energyCache, vertical);
+                        relax(j, i, r, i + 1, distTo, edgeTo, vertical);
                 else
                     for (int r : adj(i, j, vertical))
-                        relax(i, j, i + 1, r, distTo, edgeTo, energyCache, vertical);
+                        relax(i, j, i + 1, r, distTo, edgeTo, vertical);
         return pathTo(pWidth - 1, pHeight - 1, edgeTo[pHeight][0], edgeTo, bound, vertical);
     }
 
-    private void relax(int x1, int y1, int x2, int y2, double[][] distTo, int[][] edgeTo, double[][] energyCache,
+    private void relax(int x1, int y1, int x2, int y2, double[][] distTo, int[][] edgeTo,
             boolean vertical) {
         double weight = 1000; // Edge pixel
-        if (x2 < pWidth - 1 && y2 < pHeight - 1) // If x2 & y2 not edge pixel
-            weight = energy(x2, y2, energyCache);
+        if (x2 > 0 && x2 < pWidth - 1 && y2 > 0 && y2 < pHeight - 1) // If x2 & y2 not edge pixel
+            weight = energy(x2, y2, true);
         if (distTo[y2][x2] == 0 || distTo[y2][x2] > distTo[y1][x1] + weight) { // If dist not set, or smaller, update
             distTo[y2][x2] = distTo[y1][x1] + weight;
             if (vertical)
@@ -178,6 +181,17 @@ public class SeamCarver {
         for (int i = 0; i < pWidth; i++)
             for (int j = seam[i]; j < pHeight; j++)
                 colors[j][i] = colors[j + 1][i];
+
+        for (int i = 0; i < pWidth; i++)
+            for (int j = seam[i] - 1; j < pHeight - 1; j++)
+                if (j >= 0 && j < seam[i] + 1)
+                    energies[j][i] = energy(i, j, false);
+                else if (j >= seam[i] + 1)
+                    energies[j][i] = energy(i, j + 1, true);
+
+        // int col = 0;
+        // for (int row : seam) // Update energy for pixels += 2 adjacent pixels away
+        // updateGrad(col++, row, false);
     }
 
     // Remove vertical seam from current picture
@@ -185,9 +199,44 @@ public class SeamCarver {
         if (!validateSeam(seam, true))
             throw new IllegalArgumentException();
         pWidth = pWidth - 1;
-        for (int i = 0; i < pHeight; i++) {
+        for (int i = 0; i < pHeight; i++)
             for (int j = seam[i]; j < pWidth; j++)
                 colors[i][j] = colors[i][j + 1];
+
+        // int row = 0;
+        // for (int col : seam) // Update energy for pixels += 2 adjacent pixels away
+        // updateGrad(col, row++, true);
+        for (int i = 0; i < pHeight; i++) {
+            for (int j = seam[i] - 1; j < pWidth - 1; j++)
+                if (j >= 0)
+                    energies[i][j] = energy(j, i, false);
+
+        }
+    }
+
+    private void updateGrad(int x, int y, boolean vertical) {
+        if (vertical) {
+            // if (x + 2 < pWidth)
+            // energies[y][x + 2] = energy(x + 2, y, false);
+            // if (x + 1 < pWidth)
+            // energies[y][x + 1] = energy(x + 1, y, false);
+            if (x < pWidth)
+                energies[y][x] = energy(x, y, false);
+            if (x - 1 >= 0)
+                energies[y][x - 1] = energy(x - 1, y, false);
+            // if (x - 2 >= 0)
+            // energies[y][x - 2] = energy(x - 2, y, false);
+        } else {
+            // if (y + 2 < pHeight)
+            // energies[y + 2][x] = energy(x, y + 2, false);
+            // if (y + 1 < pHeight)
+            // energies[y + 1][x] = energy(x, y + 1, false);
+            if (y < pHeight)
+                energies[y][x] = energy(x, y, false);
+            if (y - 1 >= 0)
+                energies[y - 1][x] = energy(x, y - 1, false);
+            // if (y - 2 >= 0)
+            // energies[y - 2][x] = energy(x, y - 2, false);
         }
     }
 

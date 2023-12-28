@@ -5,9 +5,11 @@ import edu.princeton.cs.algs4.Picture;
 public class SeamCarver {
     private static final int[] DIR = { -1, 0, 1 };
     private final int[][] colors;
-    // private final double[][] energies;
+    private double[][] energies;
     private int pHeight;
     private int pWidth;
+    private int xStart = 0;
+    private int yStart = 0;
 
     // Create a seam carver object based on the given picture
     public SeamCarver(Picture picture) {
@@ -17,50 +19,53 @@ public class SeamCarver {
         pHeight = pic.height();
         pWidth = pic.width();
         colors = new int[pHeight][pWidth];
-        // energies = new double[pHeight][pWidth];
-        for (int i = 0; i < pHeight; i++)
-            for (int j = 0; j < pWidth; j++)
-                colors[i][j] = pic.getRGB(j, i);
+        energies = new double[pHeight][pWidth];
+        for (int i = 0; i < pHeight + 2; i++)
+            for (int j = 0; j < pWidth; j++) {
+                if (i < pHeight)
+                    colors[i][j] = pic.getRGB(j, i);
+                if (i >= 2)
+                    energies[i - 2][j] = energy(j, i - 2);
+            }
     }
 
     // Current picture
     public Picture picture() {
-        Picture newPic = new Picture(pWidth, pHeight);
-        for (int i = 0; i < pHeight; i++)
-            for (int j = 0; j < pWidth; j++)
-                newPic.setRGB(j, i, colors[i][j]);
+        Picture newPic = new Picture(width(), height());
+        for (int i = yStart; i < pHeight; i++)
+            for (int j = xStart; j < pWidth; j++)
+                newPic.setRGB(j - xStart, i - yStart, colors[i][j]);
         return newPic;
     }
 
     // Width of current picture
     public int width() {
-        return pWidth;
+        return pWidth - xStart;
     }
 
     // Height of current picture
     public int height() {
-        return pHeight;
+        return pHeight - yStart;
     }
 
     public double energy(int x, int y) {
-        return energy(x, y, null);
+        return energy(x, y, false);
     }
 
     // Energy of pixel at column x and row y
-    private double energy(int x, int y, double[][] energyCache) {
-        if (x < 0 || x >= pWidth || y < 0 || y >= pHeight)
+    private double energy(int x, int y, boolean useCache) {
+        if (x < xStart || x >= pWidth || y < yStart || y >= pHeight)
             throw new IllegalArgumentException();
-        else if (x == 0 || x == pWidth - 1 || y == 0 || y == pHeight - 1)
+        else if (x == xStart || x == pWidth - 1 || y == yStart || y == pHeight - 1)
             return 1000;
 
-        if (energyCache == null || energyCache[y][x] == 0.0) {
+        if (!useCache) {
             double xGrad = gradientSq(x + 1, y, x - 1, y), yGrad = gradientSq(x, y + 1, x, y - 1);
             double grad = Math.sqrt(xGrad + yGrad);
-            if (energyCache != null)
-                energyCache[y][x] = grad;
+            energies[y][x] = grad;
             return grad;
         } else
-            return energyCache[y][x];
+            return energies[y][x];
     }
 
     private double gradientSq(int x1, int y1, int x2, int y2) {
@@ -74,18 +79,18 @@ public class SeamCarver {
 
     // Sequence of indices for horizontal seam
     public int[] findHorizontalSeam() {
-        return sp(pWidth, pHeight, false);
+        return sp(pWidth, pHeight, xStart, yStart, false);
     }
 
     // Sequence of indices for vertical seam
     public int[] findVerticalSeam() {
-        return sp(pHeight, pWidth, true);
+        return sp(pHeight, pWidth, yStart, xStart, true);
     }
 
-    private int[] pathTo(int x, int y, int e, int[][] edgeTo, int bound, boolean vertical) {
-        int[] res = new int[bound];
-        for (int i = 0; i < bound; i++) { // reverse direction return by edgeTo (built from v->w)
-            res[bound - i - 1] = e;
+    private int[] pathTo(int x, int y, int e, int[][] edgeTo, int bound, int bStart, boolean vertical) {
+        int[] res = new int[bound - bStart];
+        for (int i = bStart; i < bound; i++) { // reverse direction return by edgeTo (built from v->w)
+            res[bound - bStart - i - 1] = e;
             if (vertical)
                 e = edgeTo[y--][e]; // edgeTo will be col val, decrement y
             else
@@ -94,38 +99,38 @@ public class SeamCarver {
         return res;
     }
 
-    private int[] sp(int bound, int other, boolean vertical) {
+    private int[] sp(int bound, int other, int bStart, int oStart, boolean vertical) {
         int[][] edgeTo = new int[pHeight + 1][pWidth];
-        double[][] distTo = new double[pHeight + 1][pWidth], energyCache = new double[pHeight][pWidth];
-        for (int i = 0; i < other; i++)
+        double[][] distTo = new double[pHeight + 1][pWidth];
+        for (int i = oStart; i < other; i++)
             if (vertical) {
-                edgeTo[0][i] = i;
-                distTo[0][i] = 1000;
+                edgeTo[yStart][i] = i;
+                distTo[yStart][i] = 1000;
             } else {
-                edgeTo[i][0] = i;
-                distTo[i][0] = 1000;
+                edgeTo[i][xStart] = i;
+                distTo[i][xStart] = 1000;
             }
-        for (int i = 0; i < bound; i++)
-            for (int j = 1; j < other - 1; j++)
+        for (int i = bStart; i < bound; i++)
+            for (int j = 1 + oStart; j < other - 1; j++)
                 if (i == bound - 1) // vBottom
                     if (vertical)
-                        relax(j, i, 0, pHeight, distTo, edgeTo, energyCache, vertical);
+                        relax(j, i, xStart, pHeight, distTo, edgeTo, vertical);
                     else
-                        relax(i, j, 0, pHeight, distTo, edgeTo, energyCache, vertical);
+                        relax(i, j, xStart, pHeight, distTo, edgeTo, vertical);
                 else if (vertical)
                     for (int r : adj(j, i, vertical))
-                        relax(j, i, r, i + 1, distTo, edgeTo, energyCache, vertical);
+                        relax(j, i, r, i + 1, distTo, edgeTo, vertical);
                 else
                     for (int r : adj(i, j, vertical))
-                        relax(i, j, i + 1, r, distTo, edgeTo, energyCache, vertical);
-        return pathTo(pWidth - 1, pHeight - 1, edgeTo[pHeight][0], edgeTo, bound, vertical);
+                        relax(i, j, i + 1, r, distTo, edgeTo, vertical);
+        return pathTo(pWidth - 1, pHeight - 1, edgeTo[pHeight][xStart], edgeTo, bound, bStart, vertical);
     }
 
-    private void relax(int x1, int y1, int x2, int y2, double[][] distTo, int[][] edgeTo, double[][] energyCache,
+    private void relax(int x1, int y1, int x2, int y2, double[][] distTo, int[][] edgeTo,
             boolean vertical) {
         double weight = 1000; // Edge pixel
-        if (x2 < pWidth - 1 && y2 < pHeight - 1) // If x2 & y2 not edge pixel
-            weight = energy(x2, y2, energyCache);
+        if (x2 > xStart && x2 < pWidth - 1 && y2 > yStart && y2 < pHeight - 1) // If x2 & y2 not edge pixel
+            weight = energy(x2, y2, true);
         if (distTo[y2][x2] == 0 || distTo[y2][x2] > distTo[y1][x1] + weight) { // If dist not set, or smaller, update
             distTo[y2][x2] = distTo[y1][x1] + weight;
             if (vertical)
@@ -140,9 +145,9 @@ public class SeamCarver {
         int k = 0;
         for (int d : DIR) {
             int adjX = x + d, adjY = y + d;
-            if (vertical && adjX >= 0 && adjX < pWidth)
+            if (vertical && adjX >= xStart && adjX < pWidth)
                 res[k++] = adjX;
-            else if (!vertical && adjY >= 0 && adjY < pHeight)
+            else if (!vertical && adjY >= yStart && adjY < pHeight)
                 res[k++] = adjY;
         }
         return res;
@@ -176,10 +181,30 @@ public class SeamCarver {
     public void removeHorizontalSeam(int[] seam) {
         if (!validateSeam(seam, false))
             throw new IllegalArgumentException();
-        pHeight = pHeight - 1;
-        for (int i = 0; i < pWidth; i++)
-            for (int j = seam[i]; j < pHeight; j++)
-                colors[j][i] = colors[j + 1][i];
+        // pHeight = pHeight - 1;
+        boolean rtl = true;
+        if (seam[0] < pHeight / 2) {
+            rtl = false;
+            yStart++;
+        } else
+            pHeight--;
+        for (int i = xStart; i < pWidth; i++) {
+            if (rtl)
+                for (int j = seam[i]; j < pHeight; j++)
+                    colors[j][i] = colors[j + 1][i];
+            else
+                for (int j = seam[i]; j >= yStart; j--)
+                    colors[j][i] = colors[j - 1][i];
+        }
+        for (int i = xStart; i < pWidth; i++)
+            if (rtl) {
+                for (int j = seam[i] - 1; j < pHeight - 1; j++)
+                    if (j >= xStart)
+                        energies[j][i] = energy(i, j, false);
+            } else
+                for (int j = seam[i] + 1; j > yStart - 1; j--)
+                    if (j < pHeight)
+                        energies[j][i] = energy(i, j, false);
     }
 
     // Remove vertical seam from current picture
@@ -187,25 +212,16 @@ public class SeamCarver {
         if (!validateSeam(seam, true))
             throw new IllegalArgumentException();
         pWidth = pWidth - 1;
-        for (int i = 0; i < pHeight; i++) {
+        for (int i = 0; i < pHeight; i++)
             for (int j = seam[i]; j < pWidth; j++)
                 colors[i][j] = colors[i][j + 1];
+
+        for (int i = 0; i < pHeight; i++) {
+            for (int j = seam[i] - 1; j < pWidth - 1; j++)
+                if (j >= 0)
+                    energies[i][j] = energy(j, i, false);
         }
     }
-
-    // private void updateGrad(int x, int y, boolean vertical) {
-    // if (vertical) {
-    // if (x < pWidth && x >= 0 && y >= 0 && y < pHeight)
-    // energies[y][x] = energy(x, y, false);
-    // if (x - 1 < pWidth && x - 1 >= 0 && y >= 0 && y < pHeight)
-    // energies[y][x - 1] = energy(x - 1, y, false);
-    // } else {
-    // if (x < pWidth && x >= 0 && y >= 0 && y < pHeight)
-    // energies[y][x] = energy(x, y, false);
-    // if (x < pWidth && x >= 0 && y - 1 >= 0 && y - 1 < pHeight)
-    // energies[y - 1][x] = energy(x, y - 1, false);
-    // }
-    // }
 
     // Unit testing (optional)
     public static void main(String[] args) {
@@ -237,25 +253,30 @@ public class SeamCarver {
         SeamCarver timed = new SeamCarver(SCUtility.randomPicture(736, 584));
         int count = 0;
         long start = System.currentTimeMillis();
-        while (System.currentTimeMillis() - start < 1000) {
-            timed.removeHorizontalSeam(timed.findHorizontalSeam());
+        while (System.currentTimeMillis() - start < 1500) {
+            // timed.removeHorizontalSeam(timed.findHorizontalSeam());
+            timed.removeVerticalSeam(timed.findVerticalSeam());
             timed.removeVerticalSeam(timed.findVerticalSeam());
             count++;
         }
-        System.out.println("Runs per second: " + count);
+        System.out.println("Runs per second: " + (count * 2) / 3);
         SeamCarver testSC = new SeamCarver(new Picture(args[0]));
+        // SeamCarver testSC = new SeamCarver(SCUtility.randomPicture(500, 500));
 
         // Display algorithms functionality
-        for (int i = 0; i < 50; i++) {
-            int[] rmSeam = testSC.findVerticalSeam();
-            Picture overlaid = SCUtility.seamOverlay(testSC.picture(), false, rmSeam);
-            testSC.removeVerticalSeam(rmSeam);
-            overlaid.show();
-        }
+        // for (int i = 0; i < 50; i++) {
+        // int[] rmSeam = testSC.findVerticalSeam();
+        // Picture overlaid = SCUtility.seamOverlay(testSC.picture(), false, rmSeam);
+        // testSC.removeVerticalSeam(rmSeam);
+        // overlaid.show();
+        // }
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 100; i++) {
             int[] rmSeam = testSC.findHorizontalSeam();
-            Picture overlaid = SCUtility.seamOverlay(testSC.picture(), true, rmSeam);
+            int[] otherRmSeam = new int[rmSeam.length];
+            for (int u = 0; u < rmSeam.length; u++)
+                otherRmSeam[u] = rmSeam[u] - testSC.yStart;
+            Picture overlaid = SCUtility.seamOverlay(testSC.picture(), true, otherRmSeam);
             testSC.removeHorizontalSeam(rmSeam);
             overlaid.show();
         }
