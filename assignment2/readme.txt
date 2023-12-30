@@ -46,16 +46,20 @@
 
  H           time (seconds)      ratio       log ratio
 ------------------------------------------------------
-2000        0.8870                -           
-4000        1.3060                1.4724      0.1680
-8000        3.1490                2.4112      0.3822
-16000       6.0940                1.9352      0.2867
-32000       23.046                3.8099      0.5809
-64000       71.516                3.1032      0.4918
+1000        0.147                -           
+2000        0.362                1.5958      0.2029
+4000        0.577                2.7963      0.4466
+8000        0.976                2.6629      0.4254
+16000       2.734                4.2830      0.6317
+32000       12.123               8.2302      0.9154
 
-avg log = .3819
-1.0605 = a * (2000 * 20000) ^ .3819
-a = .012496
+avg log = .3833
+
+System of equations:
+
+0.976 = a * 2000 ^ b1 * 8000 ^ .3833
+0.976 = a * 2000 ^ b1 * 31.3251
+0.0312 = a * 2000 ^ b1
 
 (keep H constant)
  H = 2000
@@ -63,16 +67,18 @@ a = .012496
 
  W           time (seconds)      ratio       log ratio
 ------------------------------------------------------
-2000        0.7680                -                
-4000        1.3310                1.7331      0.2388  
-8000        2.7150                2.0398      0.3096
-16000       5.5830                2.0564      0.3131
-32000       11.266                2.0179      0.3049
-64000       31.745                2.8178      0.4499
+1000        0.126                -                
+2000        0.280                0.5378      0.2388  
+4000        0.412                3.0861      0.3096
+8000        0.828                1.4704      0.3131
+16000       2.126                2.4528      0.3049
+32000       4.473                2.6791      0.3049
 
-avg log = .3233
-9.091 = a * (2000 * 20000) ^ .3233
-a = .0316859
+
+avg log = .3100
+
+0.828 = a * 8000 ^ .31 * 2000 ^ .3833
+a = 0.02390494867 ~ 2.39×10−2
 
 
 /* *****************************************************************************
@@ -92,25 +98,58 @@ a = .0316859
 Running time (in seconds) to find and remove one horizontal seam and one
 vertical seam, as a function of both W and H:
 
-    Hypothesis: Running time order of growth is linear to H * W -> a * (W*H) ^ b
-    ~ 
-       _______________________________________
+    Time complexity: Running time order of growth is linear to H * W, determined by the shortest path function which traverses ~ 3(M*N) pixels...
 
+    ~ 2.4*10^−2 * W^.31 * H^.38
+    _______________________________________
 
+    Memory complexity: Memory usage order of growth is linear to M*N. Usage, in bytes, was:
+
+     ~ 12*M*N + 64N + 88
+    _______________________________________
 
 
 /* *****************************************************************************
  *  Known bugs / limitations.
  **************************************************************************** */
-
-
+1. Program cannot compute for photos larger than 128K W and 64K H.
+2. Remove vertical seam is significantly (2x-5x) slower than horizontal seam for large inputs (H >= 16000)
 
 
 /* *****************************************************************************
  *  Describe any serious problems you encountered.                    
  **************************************************************************** */
 
+>>>>> BEFORE OPTIMIZING >>>>
+1. Initially I did not read the instructions, and the seam consisted of both x and y coordinates, in a set.
+   I removed the pixels by storing them in a dictionary and examining each pixel for a match. I would then transfer
+   the non seam pixels to a new array, and subsequently update the photo instance variable. I fixed this by storing the
+   index of the orthogonal coordinate in the seam array, and skipping over the pixels that matched when updating the photo.
 
+2. I had some early difficulties in adopting the virtual top strategy from the union find percolation algorithm to graph traversal.
+
+3. I had minor difficulties transitioning from an explicit graph implementation to an implicit one. This stemmed primarily from 
+   reimplementing the shortest paths traversal / mapping functions. I also did not fully understand how intermediate distances and
+   traversal paths were stored in distTo and edgeTo.
+
+4. I had major difficulties updating the energy cache in the remove seam function. I believe it was because I was sloppy with my tracking
+   of indices in the iteration across the pixels. I also was using my energy function to compute new AND cached energy values, which was
+   convoluted and inefficient. I settled on reseting the energy cache for each find seam call. Then after attempting to implement a bimodal
+   starting / ending index for my colors array, I refactored my indices, joining common logic from vertical and horizontal find seam functions,
+   and mapping boundary indices into function parameters. This drastically simplified the logic for shifting gradient values such that only
+   seam[i] and seam[i] - 1 were recomputed. The lesson is to BE CAREFUL with loop indices. Something as innoculous of using a Math.max(n, 0) for
+   the starting index instead of a if (n >= 0) within the loop had unforseen consequences. Get everything working and stabalized before trying
+   fancy optimzations.
+
+5. I ultimately failed to implement a bimodal index for starting and stopping points of the pixels. My theory was that starting at origin 0,0
+   was inefficcient for seams >= pHeight, pWidth / 2. However, after testing, the difference was negligible. And the added complexity of mapping 
+   everything from the start indexed cache arrays and the path functions proved insurmountable.
+
+5. Generally, I think I would benefit from a more incremental, test-driven evaluation of my hypothesis driven approach to algorithm design. 
+Having robust unit tests, with Brute force checking functions, would greatly simplify my evaluation of changes to the program, and reduce time spend in rabbit holes.
+   I have a habbit of making a series of changes aligned with my hypothesis, and then testing later, requiring me to backtrack significantly.
+
+>>>>> AFTER OPTIMIZING >>>>
 
 
 /* *****************************************************************************
@@ -118,3 +157,38 @@ vertical seam, as a function of both W and H:
  *  on how much you learned from doing the assignment, and whether    
  *  you enjoyed doing it.                                             
  **************************************************************************** */
+
+ Optimization journey...
+
+ * General tip -> For if / else blocks, if some conditions will be true more often than others, put those at the beginning of the control flow block.
+ * Less is more... reducing size of control flow blocks is always ideal. Usually be leveraging information known about the input, or restructuring
+   the flow of information such that attributes of the data are determined in advance. 
+ * Beware of lazy initialization of arrays. Although it is intended to be a sublinear approach, it usually embeds complexity in the control flow,
+   requiring that you check if a value exists many times. It is usually better to just initialize everything up front, especially if multiple 
+   passes of the function will eventually fill out the array anyway. This was especially true for the colors and energies cache arrays.
+
+1. I reimplemented by adj func from returning an ArrayList<Integer> to return int[], dynamically choosing between len 2 and len 3.
+
+2. I was previously storing the path energy sum (distTo) and path pixels (edgeTo) as 1D primitive int arrays. This required 
+   computing the 2D index whenever reading / writing to the array in the sp function. To avoid this, I traded time for memory
+   by switching to a 2D array.
+
+3. I began storing energy computations from the relax function in a 2D array. I realized that I was computing 3(M*N) energies when 
+   at most I should have to compute M*N. The array was reset for each call to find seam.
+
+>>> These two optimizations improved my program runtime from .77 to .36 >>>
+
+4. I changed my adj func to return a fixed length 3 int[]. I did this by by removing the need for a variable length result
+   by limiting path traversal to non-border pixels (0 < j < bound - 1 ), which all have 3 adj pixels.
+
+5. I ceased to update the photo instance variable when removing seams. Instead, only updating the pHeight and pWidth and colors cache array.
+   I would then update the photo in the picture method, and return it. However I then realized I did not need to store the photo as an instance
+   variable at all. I only needed to create a photo instance on demand when the client requested it, using the cached colors. This freed up the
+   memory necessary to store the energies cache as an instance variable maintained across seam removals.
+
+
+6. I reduced energy cache computations to only be necessary during initialization, and for 2*k*M / 2*k*N pixels (k = number of seams removed).
+   I did this by deducing that only the pixel north / west and south / east of the seam would have their energy values changed by the removal 
+   of the seam. Thus for the all pixels after the seam[i] or before seam[i] -1, the update to the energy was just energies[i][j] = energies[i][j+1].
+
+>>> These 3 optimizations reduced runtime from .36 to .09 :) >>>

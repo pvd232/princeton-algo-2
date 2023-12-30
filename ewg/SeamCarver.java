@@ -209,15 +209,15 @@ public class SeamCarver {
     public static void main(String[] args) {
         // Runtime tests
         Picture[] hPics = new Picture[6], wPics = new Picture[6];
-        int height = 1000, width = 1000;
-        for (int i = 0; i < 5; i++) {
+        int height = 500, width = 500;
+        for (int i = 0; i < 6; i++) {
             height = height * 2;
             width = width * 2;
             hPics[i] = SCUtility.randomPicture(2000, height);
             wPics[i] = SCUtility.randomPicture(width, 2000);
         }
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             SeamCarver testSC = new SeamCarver(hPics[i]);
             long startTime = System.currentTimeMillis();
             testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
@@ -226,7 +226,7 @@ public class SeamCarver {
             System.out.println("H trial " + i + " time: " + endTime);
         }
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             SeamCarver testSC = new SeamCarver(wPics[i]);
             long startTime = System.currentTimeMillis();
             testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
