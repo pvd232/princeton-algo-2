@@ -63,7 +63,7 @@ public class SeamCarver {
 
     private double gradientSq(int x1, int y1, int x2, int y2) {
         int c1 = colors[y1][x1], c2 = colors[y2][x2];
-        // bit shift to extract RGB values from binary encoding of the int RGB value
+        // Bit shift to extract RGB values from binary encoding of the int RGB value
         int r1 = (c1 >> 16) & 0xff, g1 = (c1 >> 8) & 0xff, b1 = c1 & 0xff;
         int r2 = (c2 >> 16) & 0xff, g2 = (c2 >> 8) & 0xff, b2 = c2 & 0xff;
         double rD = Math.pow(r1 - r2, 2), bD = Math.pow(b1 - b2, 2), gD = Math.pow(g1 - g2, 2);
@@ -110,7 +110,7 @@ public class SeamCarver {
     private int[] pathTo(int x, int y, int e, int[][] edgeTo, int bound, boolean vertical) {
         int[] res = new int[bound];
         for (int i = 0; i < bound; i++) {
-            res[bound - i - 1] = e; // reverse direction returned by edgeTo (built from v->w)
+            res[bound - i - 1] = e; // Reverse direction returned by edgeTo (built from v->w)
             if (vertical)
                 e = edgeTo[y--][e]; // edgeTo will be col val, decrement y
             else
