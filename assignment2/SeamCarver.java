@@ -179,11 +179,10 @@ public class SeamCarver {
         // Update pixel energies
         for (int i = 0; i < pWidth; i++)
             for (int j = seam[i] - 1; j < pHeight - 1; j++)
-                if (j >= 0 && j < seam[i] + 1)
-                    energies[j][i] = energy(i, j);
-                else if (j >= seam[i] + 1)
+                if (j >= seam[i] + 1)
                     energies[j][i] = energies[j + 1][i];
-
+                else if (j >= 0 && j < seam[i] + 1)
+                    energies[j][i] = energy(i, j);
     }
 
     // Remove vertical seam from current picture
@@ -198,42 +197,10 @@ public class SeamCarver {
         // Update pixel energies
         for (int i = 0; i < pHeight; i++)
             for (int j = seam[i] - 1; j < pWidth - 1; j++)
-                if (j >= 0 && j < seam[i] + 1)
-                    energies[i][j] = energy(j, i);
-                else if (j >= seam[i] + 1)
+                if (j >= seam[i] + 1)
                     energies[i][j] = energies[i][j + 1];
-    }
-
-    // Confirmed working
-    private void testRemoveHorizontalSeam(int[] seam) {
-        validateSeam(seam, false);
-        pHeight = pHeight - 1;
-        for (int i = 0; i < pWidth; i++)
-            for (int j = seam[i]; j < pHeight; j++)
-                colors[j][i] = colors[j + 1][i];
-
-        for (int i = 0; i < pWidth; i++)
-            for (int j = seam[i] - 1; j < pHeight - 1; j++)
-                if (j >= 0 && j < seam[i] + 1)
-                    energies[j][i] = energy(i, j);
-                else if (j >= seam[i] + 1)
-                    energies[j][i] = energy(i, j + 1);
-    }
-
-    // Confirmed working
-    private void testRemoveVerticalSeam(int[] seam) {
-        if (!validateSeam(seam, true))
-            throw new IllegalArgumentException();
-        pWidth = pWidth - 1;
-        for (int i = 0; i < pHeight; i++)
-            for (int j = seam[i]; j < pWidth; j++)
-                colors[i][j] = colors[i][j + 1];
-
-        for (int i = 0; i < pHeight; i++) {
-            for (int j = seam[i] - 1; j < pWidth - 1; j++)
-                if (j >= 0)
+                else if (j >= 0 && j < seam[i] + 1)
                     energies[i][j] = energy(j, i);
-        }
     }
 
     // Unit testing (optional)
