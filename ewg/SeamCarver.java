@@ -22,7 +22,7 @@ public class SeamCarver {
             for (int j = 0; j < pWidth; j++) {
                 if (i < pHeight)
                     colors[i][j] = pic.getRGB(j, i);
-                if (i >= 2)
+                if (i >= 2) // n-2 colors necessary for n energy computation
                     energies[i - 2][j] = energy(j, i - 2);
             }
     }
@@ -81,9 +81,9 @@ public class SeamCarver {
     }
 
     private int[] sp(int bound, int other, boolean vertical) {
-        int[][] edgeTo = new int[pHeight + 1][pWidth];
+        int[][] edgeTo = new int[pHeight + 1][pWidth]; // pHeight + 1 b/c virtual bottom
         double[][] distTo = new double[pHeight + 1][pWidth];
-        for (int i = 0; i < other; i++)
+        for (int i = 0; i < other; i++) // Set starting row for simplified virtual top
             if (vertical) {
                 edgeTo[0][i] = i;
                 distTo[0][i] = 1000;
@@ -91,11 +91,12 @@ public class SeamCarver {
                 edgeTo[i][0] = i;
                 distTo[i][0] = 1000;
             }
+        // Each vert n in edgeTo searches 3 adj n-1 verts for min energy to add to path
         for (int i = 0; i < bound; i++)
-            for (int j = 1; j < other - 1; j++)
+            for (int j = 1; j < other - 1; j++) // 0 < j < bound - 1 b/c border pixels have same path as adj pixels
                 if (i == bound - 1 && vertical) // vBottom
                     relax(j, i, 0, pHeight, distTo, edgeTo, vertical);
-                else if (i == bound - 1 && !vertical)
+                else if (i == bound - 1 && !vertical) // vBottom
                     relax(i, j, 0, pHeight, distTo, edgeTo, vertical);
                 else if (vertical)
                     for (int r : adj(j, i, vertical))
@@ -103,14 +104,13 @@ public class SeamCarver {
                 else
                     for (int r : adj(i, j, vertical))
                         relax(i, j, i + 1, r, distTo, edgeTo, vertical);
-        return pathTo(pWidth - 1, pHeight - 1, edgeTo[pHeight][0], edgeTo, bound,
-                vertical);
+        return pathTo(pWidth - 1, pHeight - 1, edgeTo[pHeight][0], edgeTo, bound, vertical);
     }
 
     private int[] pathTo(int x, int y, int e, int[][] edgeTo, int bound, boolean vertical) {
         int[] res = new int[bound];
-        for (int i = 0; i < bound; i++) { // reverse direction return by edgeTo (built from v->w)
-            res[bound - i - 1] = e;
+        for (int i = 0; i < bound; i++) {
+            res[bound - i - 1] = e; // reverse direction returned by edgeTo (built from v->w)
             if (vertical)
                 e = edgeTo[y--][e]; // edgeTo will be col val, decrement y
             else
@@ -119,6 +119,7 @@ public class SeamCarver {
         return res;
     }
 
+    // Examine adj pixels for new low gradient paths
     private void relax(int x1, int y1, int x2, int y2, double[][] distTo, int[][] edgeTo,
             boolean vertical) {
         double weight = 1000; // Edge pixel
@@ -134,7 +135,7 @@ public class SeamCarver {
     }
 
     private int[] adj(int x, int y, boolean vertical) {
-        int[] res = new int[3];
+        int[] res = new int[3]; // Always 3 adj pixels b/c border pixels not considered in shortest paths
         int k = 0;
         for (int d : DIR) {
             int adjX = x + d, adjY = y + d;
@@ -172,26 +173,25 @@ public class SeamCarver {
     // Remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam) {
         validateSeam(seam, false);
-        pHeight--;
-        // Remove seam / update pixel colors before updating pixel energies
+        pHeight--; // Decrement bound before removing seam
+        // Remove seam
         for (int i = 0; i < pWidth; i++)
             for (int j = seam[i]; j < pHeight; j++)
-                colors[j][i] = colors[j + 1][i];
+                colors[j][i] = colors[j + 1][i]; // Shift pixel colors to j+1 from seam[i] -> --pHeight
 
-        // Update pixel energies
+        // Update pixel energies after colors are updated
         for (int i = 0; i < pWidth; i++)
-            for (int j = seam[i] - 1; j < pHeight - 1; j++)
-                if (j >= seam[i] + 1)
+            for (int j = seam[i] - 1; j < pHeight - 1; j++) // seam[i] = idx of adj pixel >= the OG seam pixel
+                if (j >= seam[i] + 1) // If idx is the pixel after the seam, shift to cached value
                     energies[j][i] = energies[j + 1][i];
-                else if (j >= 0 && j < seam[i] + 1)
+                else if (j >= 0 && j < seam[i] + 1) // seam[i] - 1 && seam[i] energies are changed by seam removal
                     energies[j][i] = energy(i, j);
     }
 
     // Remove vertical seam from current picture
     public void removeVerticalSeam(int[] seam) {
         validateSeam(seam, true);
-        pWidth--; // Decrement pWidth before removing seam
-
+        pWidth--;
         // Remove seam
         for (int i = 0; i < pHeight; i++)
             for (int j = seam[i]; j < pWidth; j++)
@@ -207,24 +207,35 @@ public class SeamCarver {
 
     // Unit testing (optional)
     public static void main(String[] args) {
-        // Running time tests
-        // int height = 1000;
-        // for (int i = 0; i < 5; i++) {
-        // height = height * 2;
-        // Picture testPicture = SCUtility.randomPicture(2000, height);
-        // SeamCarver testSC = new SeamCarver(testPicture);
+        // Runtime tests
+        Picture[] hPics = new Picture[6], wPics = new Picture[6];
+        int height = 1000, width = 1000;
+        for (int i = 0; i < 5; i++) {
+            height = height * 2;
+            width = width * 2;
+            hPics[i] = SCUtility.randomPicture(2000, height);
+            wPics[i] = SCUtility.randomPicture(width, 2000);
+        }
 
-        // long startTime = System.currentTimeMillis();
-        // testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
-        // testSC.removeVerticalSeam(testSC.findVerticalSeam());
-        // long endTime = System.currentTimeMillis() - startTime;
-        // System.out.println("H trial " + i + " time: " + endTime);
-        // }
-        // int width = 1000;
-        // for (int i = 0; i < 6; i++) {
-        // width = width * 2;
-        // Picture testPicture = SCUtility.randomPicture(width, 2000);
-        // SeamCarver testSC = new SeamCarver(testPicture);
+        for (int i = 0; i < 5; i++) {
+            SeamCarver testSC = new SeamCarver(hPics[i]);
+            long startTime = System.currentTimeMillis();
+            testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
+            testSC.removeVerticalSeam(testSC.findVerticalSeam());
+            long endTime = System.currentTimeMillis() - startTime;
+            System.out.println("H trial " + i + " time: " + endTime);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            SeamCarver testSC = new SeamCarver(wPics[i]);
+            long startTime = System.currentTimeMillis();
+            testSC.removeHorizontalSeam(testSC.findHorizontalSeam());
+            testSC.removeVerticalSeam(testSC.findVerticalSeam());
+            long endTime = System.currentTimeMillis() - startTime;
+            System.out.println("W trial " + i + " time: " + endTime);
+        }
+
+        // Test static removals
         SeamCarver test1 = new SeamCarver(new Picture(6, 6));
         test1.findVerticalSeam();
         test1.findHorizontalSeam();
@@ -234,42 +245,35 @@ public class SeamCarver {
         test1.removeHorizontalSeam(new int[] { 3, 4, 4, 4, 3 });
         test1.removeVerticalSeam(new int[] { 4, 3, 2, 3 });
 
-        // for (int i = 0; i < 250; i++) {
-        // Picture testPhoto = SCUtility.randomPicture(6, 6);
-        // Picture copyPhoto = new Picture(testPhoto);
-        // SeamCarver timedCarver = new SeamCarver(testPhoto);
-        // SeamCarver timedCarverTest = new SeamCarver(copyPhoto);
-        // int[] testSeam = { 4, 4, 3, 3, 4, 5 };
-        // timedCarver.removeHorizontalSeam(testSeam);
-        // timedCarverTest.testRemoveHorizontalSeam(testSeam);
+        // Test consistency of results after multiple removals
+        Picture testPhoto = SCUtility.randomPicture(250, 250);
+        for (int i = 0; i < 250; i++) {
+            SeamCarver timedCarver = new SeamCarver(testPhoto);
+            SeamCarver timedCarverTest = new SeamCarver(testPhoto);
 
-        // int[] hSeam = timedCarver.findHorizontalSeam();
-        // int[] testHSeam = timedCarverTest.findHorizontalSeam();
+            int[] vSeam = timedCarver.findVerticalSeam();
+            int[] testVSeam = timedCarverTest.findVerticalSeam();
 
-        // assert hSeam.length == testHSeam.length;
+            assert vSeam.length == testVSeam.length;
 
-        // for (int s = 0; s < hSeam.length; s++)
-        // assert hSeam[s] == testHSeam[s];
+            for (int s = 0; s < vSeam.length; s++)
+                assert vSeam[s] == testVSeam[s];
 
-        // timedCarver.removeHorizontalSeam(hSeam);
-        // timedCarverTest.testRemoveHorizontalSeam(testHSeam);
+            timedCarver.removeVerticalSeam(vSeam);
+            timedCarverTest.removeVerticalSeam(vSeam);
 
-        // int[] vSeam = timedCarver.findVerticalSeam();
-        // int[] testVSeam = timedCarverTest.findVerticalSeam();
+            int[] hSeam = timedCarver.findHorizontalSeam();
+            int[] testHSeam = timedCarverTest.findHorizontalSeam();
 
-        // assert vSeam.length == testVSeam.length;
+            assert hSeam.length == testHSeam.length;
 
-        // for (int s = 0; s < vSeam.length; s++) {
-        // System.out.println("v " + vSeam[s]);
-        // System.out.println("t " + testVSeam[s]);
+            for (int s = 0; s < hSeam.length; s++)
+                assert hSeam[s] == testHSeam[s];
 
-        // assert vSeam[s] == testVSeam[s];
-        // }
+            timedCarver.removeHorizontalSeam(hSeam);
+            timedCarverTest.removeHorizontalSeam(testHSeam);
+        }
 
-        // timedCarver.removeVerticalSeam(vSeam);
-        // timedCarverTest.testRemoveVerticalSeam(vSeam);
-
-        // }
         SeamCarver timedCarver = new SeamCarver(SCUtility.randomPicture(736, 584));
         int count = 0;
         long start = System.currentTimeMillis();
@@ -278,11 +282,11 @@ public class SeamCarver {
             timedCarver.removeHorizontalSeam(timedCarver.findHorizontalSeam());
             count++;
         }
-        System.out.println("Runs per second: " + count);
-        SeamCarver testSC = new SeamCarver(new Picture(args[0]));
-        // SeamCarver testSC = new SeamCarver(SCUtility.randomPicture(500, 500));
 
-        // Display algorithms functionality
+        System.out.println("Runs per second: " + count);
+
+        // Visually display algorithm functionality
+        SeamCarver testSC = new SeamCarver(new Picture(args[0]));
         for (int i = 0; i < 50; i++) {
             int[] rmVSeam = testSC.findVerticalSeam();
             Picture overlaid2 = SCUtility.seamOverlay(testSC.picture(), false, rmVSeam);
