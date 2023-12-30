@@ -168,6 +168,8 @@ Having robust unit tests, with Brute force checking functions, would greatly sim
    passes of the function will eventually fill out the array anyway. This was especially true for the colors and energies cache arrays.
 
 1. I reimplemented by adj func from returning an ArrayList<Integer> to return int[], dynamically choosing between len 2 and len 3.
+   I also refactored the directions array creation to be a static variable, such that it would not be created each time the adj func
+   was called.
 
 2. I was previously storing the path energy sum (distTo) and path pixels (edgeTo) as 1D primitive int arrays. This required 
    computing the 2D index whenever reading / writing to the array in the sp function. To avoid this, I traded time for memory
