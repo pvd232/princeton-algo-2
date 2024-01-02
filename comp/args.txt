@@ -1,6 +1,10 @@
 compress:
-java $JTMP comp.BurrowsWheeler - > comp/burrows/aa.txt | java $JTMP comp.MoveToFront - | java $JTMP edu.princeton.cs.algs4.Huffman - > comp/burrows/output/test_unary.bwt.txt
+java $J comp.BurrowsWheeler - < comp/burrows/mobydick.txt | java $J comp.MoveToFront - | java $J edu.princeton.cs.algs4.Huffman - > comp/burrows/output/mobydick.bwt.txt
 
 decompress:
-java $JTMP edu.princeton.cs.algs4.Huffman + < comp/burrows/output/test_unary.bwt.txt | java $JTMP comp.MoveToFront + | java $JTMP comp.BurrowsWheeler + > comp/burrows/output/test_decompressed_unary.txt
+java $J edu.princeton.cs.algs4.Huffman + < comp/burrows/output/mobydick_compressed.txt | java $J comp.MoveToFront + | java $J comp.BurrowsWheeler + > comp/burrows/output/mobydick_decompressed.txt
+
+both:
+java $J comp.BurrowsWheeler - < comp/burrows/abra.txt | java $J comp.MoveToFront - | java $J edu.princeton.cs.algs4.Huffman - | java $J edu.princeton.cs.algs4.Huffman + | java $J comp.MoveToFront + | java $J comp.BurrowsWheeler +
+
 

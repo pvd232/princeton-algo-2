@@ -33,13 +33,13 @@ public class BurrowsWheeler {
         return s.charAt(i - 1);
     }
 
-    // Get the key-indexed index for each char in msg
+    // Create key-indexed, index for each char in msg
     private static int[][] charCount(char[] msg) {
         int[] currCount = new int[R];
         int[][] res = new int[R][];
-        for (int i = 0; i < msg.length; i++)
+        for (int i = 0; i < msg.length; i++) // Get fixed length char count
             currCount[msg[i]]++;
-        for (int i = 0; i < res.length; i++)
+        for (int i = 0; i < res.length; i++) // Create int[] for each char
             res[i] = new int[currCount[i]];
         for (int i = 0; i < msg.length; i++)
             // Decrement currCount[msg[i]]to track the char being assigned the index
@@ -52,15 +52,15 @@ public class BurrowsWheeler {
             int first = BinaryStdIn.readInt();
             char[] msg = BinaryStdIn.readString().toCharArray(), sorted = msg.clone();
 
-            KeyIndexCount.sort(sorted);
+            KeyIndexCount.sort(sorted); // More efficient to sort chars using key-index sorting
             int[] next = new int[msg.length], sortedCount = new int[R];
             int[][] charCount = charCount(msg);
 
-            for (int i = 0; i < next.length; i++)
+            for (int i = 0; i < next.length; i++) // Match sorted suffix char idx with charCount idx, increment count
                 next[i] = charCount[sorted[i]][sortedCount[sorted[i]]++];
 
             int cnt = 0;
-            // Guard against periodic / unary msg using cnt tracker
+            // Guard against periodic / unary msg w/cnt
             while (cnt < next.length) {
                 cnt++;
                 BinaryStdOut.write(sorted[first]);

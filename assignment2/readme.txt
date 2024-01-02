@@ -47,19 +47,13 @@
  H           time (seconds)      ratio       log ratio
 ------------------------------------------------------
 1000        0.147                -           
-2000        0.362                1.5958      0.2029
-4000        0.577                2.7963      0.4466
-8000        0.976                2.6629      0.4254
-16000       2.734                4.2830      0.6317
-32000       12.123               8.2302      0.9154
+2000        0.362                2.3946      0.3792
+4000        0.577                1.6392      0.2146
+8000        0.976                1.6915      0.2283
+16000       2.734                2.3293      0.3672
+32000       12.123               5.3325      0.7269
 
 avg log = .3833
-
-System of equations:
-
-0.976 = a * 2000 ^ b1 * 8000 ^ .3833
-0.976 = a * 2000 ^ b1 * 31.3251
-0.0312 = a * 2000 ^ b1
 
 (keep H constant)
  H = 2000
@@ -68,11 +62,11 @@ System of equations:
  W           time (seconds)      ratio       log ratio
 ------------------------------------------------------
 1000        0.126                -                
-2000        0.280                0.5378      0.2388  
-4000        0.412                3.0861      0.3096
-8000        0.828                1.4704      0.3131
-16000       2.126                2.4528      0.3049
-32000       4.473                2.6791      0.3049
+2000        0.280                2.2222      0.3468
+4000        0.412                1.4714      0.1677
+8000        0.828                2.0097      0.3031
+16000       2.126                2.5676      0.4095
+32000       4.473                2.1040      0.3230
 
 
 avg log = .3100
@@ -193,4 +187,4 @@ Having robust unit tests, with Brute force checking functions, would greatly sim
    I did this by deducing that only the pixel north / west and south / east of the seam would have their energy values changed by the removal 
    of the seam. Thus for the all pixels after the seam[i] or before seam[i] -1, the update to the energy was just energies[i][j] = energies[i][j+1].
 
->>> These 3 optimizations reduced runtime from .36 to .09 :) >>>
+>>> These 3 optimizations reduced runtime from .36 to .09 !! >>>

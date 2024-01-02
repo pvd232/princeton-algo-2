@@ -3,9 +3,9 @@ package comp;
 import edu.princeton.cs.algs4.In;
 
 public class CircularSuffixArray {
-    private final String s;
-    private final int n;
-    private final int[] t;
+    private final String s; // Reference to input string
+    private final int n; // Input string length
+    private final int[] t; // Implicit circular suffix array of pointers to char idx
 
     private static class TWSQS {
         public static void sort(int[] a, String s) {
@@ -41,13 +41,12 @@ public class CircularSuffixArray {
         }
 
         private static int charAt(int start, int d, String s, int n) {
-            int i = d + start;
-            if (i < n)
+            int i = d + start; // Set i to char index (d) shifted by the starting index of the suffix
+            if (i < n) // Char idx is before the end of the string
                 return s.charAt(i);
             else if (i % n == start) // For periodic string must ensure no infinite loop
                 return -1;
-            else
-                return s.charAt(i % n);
+            return s.charAt(i % n); // Map idx to within string bounds if idx > n
         }
     }
 
@@ -65,19 +64,19 @@ public class CircularSuffixArray {
         TWSQS.sort(t, s);
     }
 
-    // length of s
+    // Length of s
     public int length() {
         return n;
     }
 
-    // returns index of ith sorted suffix
+    // Returns index of ith sorted suffix
     public int index(int i) {
         if (i < 0 || i >= n)
             throw new IllegalArgumentException();
         return t[i];
     }
 
-    // unit testing (required)
+    // Unit testing (required)
     public static void main(String[] args) {
         In in = new In(args[0]);
         String input = in.readAll();
