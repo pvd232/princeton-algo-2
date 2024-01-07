@@ -21,54 +21,44 @@ public class TrieST {
     private Node put(Node x, String key, int d) {
         if (x == null)
             x = new Node();
-
-        if (d == key.length()) {
-            if (key.length() > 2)
+        int n = key.length();
+        if (d == n) {
+            if (n > 2)
                 x.val = key;
             x.path = key;
             return x;
-        } else
-            x.isParent = true;
-
-        char c = key.charAt(d);
-        if (x.path == null)
-            x.path = key.substring(0, d);
-
-        x.next[Character.getNumericValue(c) - 10] = put(x.next[Character.getNumericValue(c) - 10], key, d + 1);
+        }
+        int c = key.charAt(d) - 65;
+        x.isParent = true;
+        x.path = key.substring(0, d);
+        x.next[c] = put(x.next[c], key, d + 1);
         return x;
     }
 
     public String get(String key) {
-        if (key.equals(prev.path))
-            return prev.val;
-        Node x = get(root, key, 0);
+        Node x = get(root, key, 0, key.length());
         if (x == null)
             return null;
         return x.val;
     }
 
-    private Node get(Node x, String key, int d) {
-        if (x == null)
-            return null;
-        else if (d == key.length())
+    // Returns the Node for a given key
+    private Node get(Node x, String key, int d, int n) {
+        if (x == null || d == n)
             return x;
-        char c = key.charAt(d);
-        return get(x.next[Character.getNumericValue(c) - 10], key, d + 1);
+        return get(x.next[key.charAt(d) - 65], key, d + 1, n);
     }
 
     private Node get(Node x, String key, int d, char ch, int n) {
-        while (d <= n)
-            if (x == null)
-                return null;
-            else if (d < n)
-                x = x.next[Character.getNumericValue(key.charAt(d++)) - 10];
-            else if (ch == 'Q') {
-                x = x.next[Character.getNumericValue(ch) - 10];
-                ch = 'U';
-            } else {
-                x = x.next[Character.getNumericValue(ch) - 10];
-                d++;
-            }
+        if (x == null)
+            return null;
+        if (d < n)
+            return get(x.next[key.charAt(d) - 65], key, d + 1, ch, n);
+        else if (d == n)
+            if (ch == 'Q')
+                return get(x.next[ch - 65], key, d, 'U', n);
+            else
+                return get(x.next[ch - 65], key, d + 1, ch, n);
         return x;
     }
 
@@ -78,10 +68,11 @@ public class TrieST {
 
     public String prefix(String old, char c) {
         Node x;
+        int n = old.length();
         if (old.equals(prev.path))
-            x = get(prev, old, old.length(), c, old.length());
+            x = get(prev, old, n, c, n);
         else
-            x = get(root, old, 0, c, old.length());
+            x = get(root, old, 0, c, n);
         if (x == null)
             return null;
         else {
@@ -96,7 +87,7 @@ public class TrieST {
         if (key.equals(prev.path))
             x = prev;
         else
-            x = get(root, key, 0);
+            x = get(root, key, 0, key.length());
         if (x.val != null)
             res.add(key);
         return x.isParent;
