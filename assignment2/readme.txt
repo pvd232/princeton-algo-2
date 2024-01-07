@@ -102,6 +102,7 @@ vertical seam, as a function of both W and H:
      ~ 12*M*N + 64N + 88
     _______________________________________
 
+   
 
 /* *****************************************************************************
  *  Known bugs / limitations.
@@ -151,6 +152,12 @@ Having robust unit tests, with Brute force checking functions, would greatly sim
  *  on how much you learned from doing the assignment, and whether    
  *  you enjoyed doing it.                                             
  **************************************************************************** */
+ 
+ Memory Complexity Experiments...
+
+ Tested different implementations to investigate the nature of differences in memory usage based on 
+ using instance variables vs local variables within functions. It appears the order of grow, as determined by the leading
+ order term, is driven by the memory stored as instance variables within classes. Will summarize later.
 
  Optimization journey...
 

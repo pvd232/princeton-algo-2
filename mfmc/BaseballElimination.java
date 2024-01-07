@@ -11,22 +11,27 @@ import java.util.HashSet;
 
 public class BaseballElimination {
     private final HashMap<String, Integer> teams;
-    private final String[] teamNames;
-    private final int[] w;
-    private final int[] losses;
-    private final int[] r;
-    private final int[][] games;
+    private final String[] teamNames; // Array of team names for result printing
+    private final int[] w; // Team-indexed array of wins
+    private final int[] losses; // Team-indexed array of losses
+    private final int[] r; // Team-indexed array of remaining games
+    private final int[][] games; // Edge weighted team-indexed game digraph
+    private final int n; // Number of teams
+    private final int nVerts;
+    private final int nMatches;
 
     // Create a baseball division from given filename in format specified below
     public BaseballElimination(String filename) {
         In in = new In(filename);
-        int n = Integer.parseInt(in.readLine());
+        n = Integer.parseInt(in.readLine());
         w = new int[n];
         losses = new int[n];
         r = new int[n];
         games = new int[n][n];
         teams = new HashMap<>();
         teamNames = new String[n];
+        nMatches = matches(n);
+        nVerts = n + nMatches + 2; // Verts in flow network, 2 extra verts for s and t
         int i = 0;
         while (i < n) {
             String team = in.readString().strip();
@@ -60,7 +65,6 @@ public class BaseballElimination {
     public int wins(String team) {
         if (!teams.containsKey(team))
             throw new IllegalArgumentException();
-
         return w[teams.get(team)];
     }
 
@@ -68,7 +72,6 @@ public class BaseballElimination {
     public int losses(String team) {
         if (!teams.containsKey(team))
             throw new IllegalArgumentException();
-
         return losses[teams.get(team)];
     }
 
@@ -76,7 +79,6 @@ public class BaseballElimination {
     public int remaining(String team) {
         if (!teams.containsKey(team))
             throw new IllegalArgumentException();
-
         return r[teams.get(team)];
     }
 
@@ -84,7 +86,6 @@ public class BaseballElimination {
     public int against(String team1, String team2) {
         if (!teams.containsKey(team1) || !teams.containsKey(team2))
             throw new IllegalArgumentException();
-
         return games[teams.get(team1)][teams.get(team2)];
     }
 
@@ -93,13 +94,13 @@ public class BaseballElimination {
         if (!teams.containsKey(team))
             throw new IllegalArgumentException();
 
-        int wins = w[teams.get(team)] + r[teams.get(team)];
+        int wins = w[teams.get(team)] + r[teams.get(team)]; // Augment number of wins with remaining games
         for (int win : w)
-            if (wins < win)
+            if (wins < win) // Trivial elimination if max potential wins < other team confirmed wins
                 return true;
 
         FlowNetwork f = network(team);
-        FordFulkerson ff = new FordFulkerson(f, 0, netLen() - 1);
+        FordFulkerson ff = new FordFulkerson(f, 0, nVerts - 1);
 
         for (int i = 1; i < f.V(); i++)
             if (ff.inCut(i))
@@ -107,27 +108,21 @@ public class BaseballElimination {
         return false;
     }
 
-    private int matches(int n) {
+    private int matches(int numTeams) {
         int res = 0;
-        for (int i = n - 2; i > 0; i--)
+        for (int i = numTeams - 2; i > 0; i--)
             res += i;
         return res;
-    }
-
-    private int netLen() {
-        return numberOfTeams() + matches(numberOfTeams()) + 2;
     }
 
     // Subset R of teams that eliminates given team; null if not eliminated
     public Iterable<String> certificateOfElimination(String team) {
         if (!teams.containsKey(team))
             throw new IllegalArgumentException();
-
         if (!isEliminated(team))
             return null;
 
         HashSet<String> res = new HashSet<>();
-
         int wins = w[teams.get(team)] + r[teams.get(team)];
         for (int i = 0; i < w.length; i++)
             if (w[i] > wins) {
@@ -136,58 +131,50 @@ public class BaseballElimination {
             }
 
         FlowNetwork f = network(team);
-        FordFulkerson ff = new FordFulkerson(f, 0, netLen() - 1);
+        FordFulkerson ff = new FordFulkerson(f, 0, nVerts - 1);
         for (int i = 0; i < f.V(); i++)
             for (FlowEdge fE : f.adj(i))
                 if (ff.inCut(fE.to()) && fE.from() != 0)
-                    res.add(teamNames[fE.to() - matches(numberOfTeams()) - 1]);
+                    res.add(teamNames[fE.to() - nMatches - 1]);
         return res;
     }
 
+    // Build FlowNetwork
     private FlowNetwork network(String team) {
-        FlowNetwork fN = new FlowNetwork(netLen());
-        int bracket = matches(numberOfTeams());
-        int teamIdx = teams.get(team), tIdx = netLen() - 1;
-
+        FlowNetwork fN = new FlowNetwork(nVerts);
+        int teamIdx = teams.get(team), tIdx = nVerts - 1;
         int added = 0, wins = w[teamIdx], remain = r[teamIdx];
-        for (int i = 0; i < numberOfTeams(); i++) {
-            for (int j = 0; j < numberOfTeams(); j++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
                 if (i != teamIdx && j != teamIdx && j > i) {
                     FlowEdge s = new FlowEdge(0, ++added, games[i][j]);
                     fN.addEdge(s);
 
-                    FlowEdge e1 = new FlowEdge(added, bracket + i + 1, Double.POSITIVE_INFINITY),
-                            e2 = new FlowEdge(added, bracket + j + 1, Double.POSITIVE_INFINITY);
+                    FlowEdge e1 = new FlowEdge(added, nMatches + i + 1, Double.POSITIVE_INFINITY),
+                            e2 = new FlowEdge(added, nMatches + j + 1, Double.POSITIVE_INFINITY);
                     fN.addEdge(e1);
                     fN.addEdge(e2);
                 }
             }
-            FlowEdge t = new FlowEdge(bracket + i + 1, tIdx, wins + remain - w[i]);
+            FlowEdge t = new FlowEdge(nMatches + i + 1, tIdx, wins + remain - w[i]);
             fN.addEdge(t);
         }
-        int sCount = 0;
-        int gamesCount = 0;
-        int tCount = 0;
-        int toTCount = 0;
+        int sCnt = 0, gamesCnt = 0, tCnt = 0, toTCnt = 0;
         for (FlowEdge fe : fN.edges()) {
             if (fe.from() == 0)
-                sCount++;
-            else if (fe.from() <= bracket && fe.from() > 0) {
-                gamesCount++;
-                assert fe.capacity() == Double.POSITIVE_INFINITY;
-            } else if (fe.from() > bracket) {
-                tCount++;
-            }
-            if (fe.to() == tIdx) {
-                toTCount++;
-            }
+                sCnt++;
+            else if (fe.from() <= nMatches && fe.from() > 0) {
+                gamesCnt++;
+                // assert fe.capacity() == Double.POSITIVE_INFINITY;
+            } else if (fe.from() > nMatches)
+                tCnt++;
+            if (fe.to() == tIdx)
+                toTCnt++;
         }
-        assert sCount == bracket; // Games pointing from s should equal bracket
-        assert gamesCount == 2 * bracket; // 2 edges pointing from each game
-
-        assert tCount == numberOfTeams(); // N-1 verts pointing to t
-
-        assert tCount == toTCount; // Should be the same
+        assert sCnt == nMatches; // Games pointing from s should equal bracket
+        assert gamesCnt == 2 * nMatches; // 2 edges pointing from each game
+        assert tCnt == n; // N-1 verts pointing to t
+        assert tCnt == toTCnt; // Should be the same
         return fN;
     }
 

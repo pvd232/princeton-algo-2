@@ -1,7 +1,6 @@
 package string;
 
 import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.Queue;
 
 public class R2Trie<Value> {
     private static final int R = 26;
@@ -48,12 +47,6 @@ public class R2Trie<Value> {
             return root.next[pre].get(key);
     }
 
-    public Iterable<String> keys() {
-        Queue<String> q = new Queue<String>();
-        collect(q);
-        return q;
-    }
-
     public String prefix(String old, char c) {
         if (old.length() < 2) {
             if (c != 'Q' || old.isBlank()) {
@@ -76,13 +69,6 @@ public class R2Trie<Value> {
             return null;
         else
             return x.prefix(old, c);
-    }
-
-    private void collect(Queue<String> q) {
-        for (char c = R; c < R * R + R; c++)
-            if (root.next[c] != null)
-                for (String s : root.next[c].keys())
-                    q.enqueue(s);
     }
 
     public static void main(String[] args) {

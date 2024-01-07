@@ -7,17 +7,14 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
 public class BoggleSolver {
+    private static final int[] DIR = { -1, 1 };
     private final TrieST dict;
     private int n;
     private int m;
-    private char[][] g;
-    private int[][] adj;
-    private boolean[][] visited;
-    private int maxLen;
+    private int maxLen; // Longest word in dict
 
-    // Initializes the data struct w/given array of strings as the dictionary.
-    // Assume each word in the dict contains only uppercase letters A through Z.
-    public BoggleSolver(String[] dictionary) {
+    // Initializes the data struct w/given array of strings as the dictionary
+    public BoggleSolver(String[] dictionary) { // Assume each word in the dict contains only uppercase letters A - Z
         if (dictionary == null)
             throw new IllegalArgumentException();
         dict = new TrieST();
@@ -33,14 +30,15 @@ public class BoggleSolver {
             throw new IllegalArgumentException();
         m = board.rows();
         n = board.cols();
-        g = new char[m][n];
-        adj = new int[m * n][];
-        visited = new boolean[m][n];
-        mkGraph(board);
-        return findWords(board);
+
+        int[][] adj = new int[m * n][]; // Precompute each tile's adjacent tiles
+        char[][] g = new char[m][n];
+
+        mkGraph(board, adj, g);
+        return findWords(board, adj, g);
     }
 
-    private void mkGraph(BoggleBoard board) {
+    private void mkGraph(BoggleBoard board, int[][] adj, char[][] g) {
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++) {
                 g[i][j] = board.getLetter(i, j);
@@ -69,23 +67,23 @@ public class BoggleSolver {
             len = 2;
 
         int count = 0;
-        int[] dir = { 1, -1 }, res = new int[len];
+        int[] res = new int[len];
 
         // Diagonal
         if (m > 1 && n > 1)
             if (!rowIsEdge && !colIsEdge)
-                for (int dy : dir)
-                    for (int dx : dir)
+                for (int dy : DIR)
+                    for (int dx : DIR)
                         res[count++] = (i + dy) * n + (j + dx);
             else if (rowIsEdge && !colIsEdge)
-                for (int dx : dir)
+                for (int dx : DIR)
                     if (i == 0)
                         res[count++] = (i + 1) * n + (j + dx);
                     else
                         res[count++] = (i - 1) * n + (j + dx);
 
             else if (!rowIsEdge && colIsEdge)
-                for (int dy : dir)
+                for (int dy : DIR)
                     if (j == 0)
                         res[count++] = (i + dy) * n + (j + 1);
                     else
@@ -101,7 +99,7 @@ public class BoggleSolver {
 
         if (n > 1) // Col
             if (!colIsEdge)
-                for (int dx : dir)
+                for (int dx : DIR)
                     res[count++] = (i * n) + (j + dx);
             else if (j == n - 1)
                 res[count++] = (i * n) + (j - 1);
@@ -110,7 +108,7 @@ public class BoggleSolver {
 
         if (m > 1) // Row
             if (!rowIsEdge)
-                for (int dy : dir)
+                for (int dy : DIR)
                     res[count++] = n * (i + dy) + j;
             else if (i == m - 1)
                 res[count++] = n * (i - 1) + j;
@@ -119,30 +117,34 @@ public class BoggleSolver {
         return res;
     }
 
-    private Iterable<String> findWords(BoggleBoard board) {
+    // Create wrapper function to store results globally
+    private Iterable<String> findWords(BoggleBoard board, int[][] adj, char[][] g) {
         HashSet<String> res = new HashSet<>();
+        boolean[][] visited = new boolean[m][n];
+
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++) {
                 String wNew = dict.prefix("", g[i][j]);
                 if (wNew != null) {
                     visited[i][j] = true;
-                    findWords(board, i, j, wNew, res);
-                    visited[i][j] = false;
+                    findWords(board, adj, g, visited, i, j, wNew, res);
+                    visited[i][j] = false; // Backtrack after recursive call completes
                 }
             }
         return res;
     }
 
-    private void findWords(BoggleBoard board, int i, int j, String w,
+    // Recursive DFS enumeration
+    private void findWords(BoggleBoard board, int[][] adj, char[][] g, boolean[][] visited, int i, int j, String w,
             HashSet<String> res) {
-        if (w.length() <= maxLen && dict.hasKids(w, res))
+        if (w.length() <= maxLen && dict.hasKids(w, res)) // If word <= longest word && != trie leaf explore adj
             for (int p : adj[i * n + j]) {
                 int row = p / n, col = p % n;
                 if (!visited[row][col]) {
                     String wNew = dict.prefix(w, g[row][col]);
                     if (wNew != null) {
                         visited[row][col] = true;
-                        findWords(board, row, col, wNew, res);
+                        findWords(board, adj, g, visited, row, col, wNew, res);
                         visited[row][col] = false;
                     }
                 }
@@ -174,7 +176,7 @@ public class BoggleSolver {
         BoggleSolver solver = new BoggleSolver(dictionary);
         int count = 0;
         long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 10000) {
+        while (System.currentTimeMillis() - startTime <= 5000) {
             BoggleBoard board = new BoggleBoard();
             solver.getAllValidWords(board);
             count++;

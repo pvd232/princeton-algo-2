@@ -60,6 +60,16 @@ MoveToFront decode()                 n + .8 n / R       n + n R            radix
 Huffman compress()                   n + R log R        n  + R log R       radix trie search
 Huffman expand()                     n                  n                  iterating through input
 
+
+Memory complexity of CircularSuffixArray is 72 (68 rounded to multiple of 8) + 6 n
+
+instance variable       memory (bytes)
+-------------------------------
+
+String s                8 + 24 + 2 n
+int n                   4
+int[] t                 8 + 24 + 4 n
+
 /* *****************************************************************************
 
 - Known bugs / limitations.
@@ -83,7 +93,7 @@ using lossy compression.
 - Describe any serious problems you encountered.  
 
 Had serious issues with encoding. This was because I attempted to shift chars without pointers to n and n-1.
-This was causing n to drag n[0] across the entire array.
+This was causing n + 1 to drag n until reaching the index of c.
 
 Initially attempted to use 3 way String QS for sorting chars in the inverse transform. This was running slower 
 than the Java system Array.sort. However, implementing with LSD radix sort proved to be the fastest (by a small margin).
