@@ -118,7 +118,7 @@ public class BoggleSolver {
                 String wNew = dict.prefix("", g[i][j]);
                 if (wNew != null) {
                     visited[i][j] = true;
-                    findWords(board, adj, g, visited, i, j, wNew, res);
+                    findWords(board, adj, g, visited, new int[] { i, j }, wNew, res);
                     visited[i][j] = false; // Backtrack after recursive call completes
                 }
             }
@@ -126,20 +126,23 @@ public class BoggleSolver {
     }
 
     // Recursive DFS enumeration
-    private void findWords(BoggleBoard board, int[][] adj, char[][] g, boolean[][] visited, int i, int j, String w,
+    private void findWords(BoggleBoard board, int[][] adj, char[][] g, boolean[][] visited, int[] coord, String w,
             HashSet<String> res) {
-        if (dict.hasKids(w, res)) // If word != trie leaf explore adj
-            for (int p : adj[i * n + j]) {
+        if (dict.hasKids(w, res)) // If != trie leaf, explore adj
+            for (int p : adj[coord[0] * n + coord[1]]) {
                 int row = p / n, col = p % n;
+                coord[0] = row;
+                coord[1] = col;
                 if (!visited[row][col]) {
                     String wNew = dict.prefix(w, g[row][col]);
                     if (wNew != null) {
                         visited[row][col] = true;
-                        findWords(board, adj, g, visited, i, j, wNew, res);
+                        findWords(board, adj, g, visited, coord, wNew, res);
                         visited[row][col] = false;
                     }
                 }
             }
+
     }
 
     // Returns the score of the given word if it is in the dict, zero otherwise.
@@ -164,7 +167,7 @@ public class BoggleSolver {
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
         BoggleSolver solver = new BoggleSolver(dictionary);
-        int count = 0;
+        // int count = 0;
         BoggleBoard board = new BoggleBoard(args[1]);
         long startTime = System.currentTimeMillis();
         solver.getAllValidWords(board);
@@ -184,11 +187,11 @@ public class BoggleSolver {
         // resSorted.add(s);
         // Collections.sort(resSorted);
         // int score = 0, wordCount = 0;
-        // for (String word : resSorted) {
-        // StdOut.println("word " + word);
+        // for (String word : res) {
+        // System.out.println("word " + word);
         // score += solver.scoreOf(word);
         // }
-        System.out.println("Calls per second: " + count / 5);
-        // StdOut.println("Score = " + score + " Word count = " + wordCount);
+        // System.out.println("Calls per second: " + count / 5);
+        // System.out.println("Score = " + score + " Word count = " + wordCount);
     }
 }

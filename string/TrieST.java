@@ -15,13 +15,12 @@ public class TrieST {
     }
 
     public void put(String key) {
-        root = put(root, key, 0);
+        root = put(root, key, 0, key.length());
     }
 
-    private Node put(Node x, String key, int d) {
+    private Node put(Node x, String key, int d, int n) {
         if (x == null)
             x = new Node();
-        int n = key.length();
         if (d == n) {
             if (n > 2)
                 x.val = key;
@@ -31,7 +30,7 @@ public class TrieST {
         int c = key.charAt(d) - 65;
         x.isParent = true;
         x.path = key.substring(0, d);
-        x.next[c] = put(x.next[c], key, d + 1);
+        x.next[c] = put(x.next[c], key, d + 1, n);
         return x;
     }
 
