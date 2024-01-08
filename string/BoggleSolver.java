@@ -142,7 +142,6 @@ public class BoggleSolver {
                     }
                 }
             }
-
     }
 
     // Returns the score of the given word if it is in the dict, zero otherwise.

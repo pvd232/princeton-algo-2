@@ -28,8 +28,9 @@ public class TrieST {
             return x;
         }
         int c = key.charAt(d) - 65;
+        if (x.path == null)
+            x.path = key.substring(0, d);
         x.isParent = true;
-        x.path = key.substring(0, d);
         x.next[c] = put(x.next[c], key, d + 1, n);
         return x;
     }
