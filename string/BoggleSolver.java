@@ -6,8 +6,8 @@ import edu.princeton.cs.algs4.In;
 public class BoggleSolver {
     private static final int[] DIR = { -1, 1 };
     private final TrieST dict;
-    private int n;
     private int m;
+    private int n;
 
     // Initializes the data struct w/given array of strings as the dictionary
     public BoggleSolver(String[] dictionary) { // Assume each word in the dict contains only uppercase letters A - Z
@@ -22,99 +22,99 @@ public class BoggleSolver {
     public Iterable<String> getAllValidWords(BoggleBoard board) {
         if (board == null)
             throw new IllegalArgumentException();
-        m = board.rows();
-        n = board.cols();
+        m = board.cols();
+        n = board.rows();
 
-        int[][] adj = new int[m * n][]; // Precompute each tile's adjacent tiles
-        char[][] g = new char[m][n];
+        int[][] adj = new int[n * m][]; // Precompute each tile's adjacent tiles
+        char[][] g = new char[n][m];
 
         // Build the graph
-        for (int i = 0; i < m; i++)
-            for (int j = 0; j < n; j++) {
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++) {
                 g[i][j] = board.getLetter(i, j);
-                adj[i * n + j] = adjN(i, j);
+                adj[i * m + j] = adjN(i, j);
             }
         return findWords(board, adj, g);
     }
 
     private int[] adjN(int i, int j) {
         boolean rowIsEdge = false, colIsEdge = false;
-        if (i == 0 || i == m - 1)
+        if (i == 0 || i == n - 1)
             rowIsEdge = true;
-        if (j == 0 || j == n - 1)
+        if (j == 0 || j == m - 1)
             colIsEdge = true;
 
         int len = 1;
-        if (!rowIsEdge && !colIsEdge) // n & m must be > 1 for non edge point to exist, must have 8 adjacencies
+        if (!rowIsEdge && !colIsEdge) // m & n must be > 1 for non edge point to exist, must have 8 adjacencies
             len = 8;
         else if (rowIsEdge && colIsEdge)
-            if (m > 1 && n > 1)
+            if (n > 1 && m > 1)
                 len = 3;
             else
                 len = 1;
-        else if (m > 2 && n > 2)
+        else if (n > 2 && m > 2)
             len = 5;
-        else if (m == 1 || n == 1)
+        else if (n == 1 || m == 1)
             len = 2;
 
         int count = 0;
         int[] res = new int[len];
 
         // Diagonal
-        if (m > 1 && n > 1)
+        if (n > 1 && m > 1)
             if (!rowIsEdge && !colIsEdge)
                 for (int dy : DIR)
                     for (int dx : DIR)
-                        res[count++] = (i + dy) * n + (j + dx);
+                        res[count++] = (i + dy) * m + (j + dx);
             else if (rowIsEdge && !colIsEdge)
                 for (int dx : DIR)
                     if (i == 0)
-                        res[count++] = (i + 1) * n + (j + dx);
+                        res[count++] = (i + 1) * m + (j + dx);
                     else
-                        res[count++] = (i - 1) * n + (j + dx);
+                        res[count++] = (i - 1) * m + (j + dx);
 
             else if (!rowIsEdge && colIsEdge)
                 for (int dy : DIR)
                     if (j == 0)
-                        res[count++] = (i + dy) * n + (j + 1);
+                        res[count++] = (i + dy) * m + (j + 1);
                     else
-                        res[count++] = (i + dy) * n + (j - 1);
+                        res[count++] = (i + dy) * m + (j - 1);
             else if (i == 0 && j == 0)
-                res[count++] = (i + 1) * n + (j + 1);
-            else if (i == 0 && j == n - 1)
-                res[count++] = (i + 1) * n + (j - 1);
-            else if (i == m - 1 && j == 0)
-                res[count++] = (i - 1) * n + (j + 1);
-            else if (i == m - 1 && j == n - 1)
-                res[count++] = (i - 1) * n + (j - 1);
+                res[count++] = (i + 1) * m + (j + 1);
+            else if (i == 0 && j == m - 1)
+                res[count++] = (i + 1) * m + (j - 1);
+            else if (i == n - 1 && j == 0)
+                res[count++] = (i - 1) * m + (j + 1);
+            else if (i == n - 1 && j == m - 1)
+                res[count++] = (i - 1) * m + (j - 1);
 
-        if (n > 1) // Col
+        if (m > 1) // Col
             if (!colIsEdge)
                 for (int dx : DIR)
-                    res[count++] = (i * n) + (j + dx);
-            else if (j == n - 1)
-                res[count++] = (i * n) + (j - 1);
+                    res[count++] = (i * m) + (j + dx);
+            else if (j == m - 1)
+                res[count++] = (i * m) + (j - 1);
             else if (j == 0)
-                res[count++] = (i * n) + (j + 1);
+                res[count++] = (i * m) + (j + 1);
 
-        if (m > 1) // Row
+        if (n > 1) // Row
             if (!rowIsEdge)
                 for (int dy : DIR)
-                    res[count++] = n * (i + dy) + j;
-            else if (i == m - 1)
-                res[count++] = n * (i - 1) + j;
+                    res[count++] = m * (i + dy) + j;
+            else if (i == n - 1)
+                res[count++] = m * (i - 1) + j;
             else if (i == 0)
-                res[count++] = n * (i + 1) + j;
+                res[count++] = m * (i + 1) + j;
         return res;
     }
 
     // Create wrapper function to store results globally
     private Iterable<String> findWords(BoggleBoard board, int[][] adj, char[][] g) {
         HashSet<String> res = new HashSet<>();
-        boolean[][] visited = new boolean[m][n];
+        boolean[][] visited = new boolean[n][m];
 
-        for (int i = 0; i < m; i++)
-            for (int j = 0; j < n; j++) {
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++) {
                 String wNew = dict.prefix("", g[i][j]);
                 if (wNew != null) {
                     visited[i][j] = true;
@@ -129,8 +129,8 @@ public class BoggleSolver {
     private void findWords(BoggleBoard board, int[][] adj, char[][] g, boolean[][] visited, int[] coord, String w,
             HashSet<String> res) {
         if (dict.hasKids(w, res)) // If != trie leaf, explore adj
-            for (int p : adj[coord[0] * n + coord[1]]) {
-                int row = p / n, col = p % n;
+            for (int p : adj[coord[0] * m + coord[1]]) {
+                int row = p / m, col = p % m;
                 coord[0] = row;
                 coord[1] = col;
                 if (!visited[row][col]) {
