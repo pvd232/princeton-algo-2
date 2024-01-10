@@ -48,7 +48,7 @@ to be played by the other teams plus the number of games already won by the othe
 - as a function of the number of teams N?
   num matches = (N^2 - 3N + 2)/2
 
-  verts = num matches + num teams - 1 + 2 ---> (N^2 - 3N + 2)/2 + N - 1 + 2 ---> 1/2(N^2 - N + 4)
+  verts = num matches + (num teams - 1) + 2 ---> (N^2 - 3N + 2)/2 + N - 1 + 2 ---> 1/2(N^2 - N + 4)
 
   edges = num matches + 2(num matches) + num teams - 1 ---> 3(num matches) + num teams - 1 ---> 3/2(N^2 - 3N + 2) + N - 1
 
@@ -74,7 +74,8 @@ Amount of memory = 2N^2 + 6N + 4
 - case) to compute a maxflow in a network with V vertices and E edges
 - is V E^2.
 
-Time complexity = 1/2(N^2 - N + 4)(3/2(N^2 - 3N + 2) + N - 1) ^ 2
+Time complexity = 1/2(N^2 - N + 4)(3/2(N^2 - 3N + 2) + N - 1) ^ 2 ---> 9/4N^4 - 15/4N^3 + 121N^2/16 - 5N + 4 
+~9/4N^4
 
 - Briefly justify your answer.
 
