@@ -89,10 +89,12 @@ public class SAP {
     public int length(int v, int w) {
         if (v >= n || w >= n || v < 0 || w < 0)
             throw new IllegalArgumentException();
+
         ArrayList<Integer> vList = new ArrayList<>(1);
         vList.add(v);
         ArrayList<Integer> wList = new ArrayList<>(1);
         wList.add(w);
+
         return pathTo(vList, wList, true);
     }
 
@@ -100,10 +102,12 @@ public class SAP {
     public int ancestor(int v, int w) {
         if (v >= n || w >= n || v < 0 || w < 0)
             throw new IllegalArgumentException();
+
         ArrayList<Integer> vList = new ArrayList<>(1);
         vList.add(v);
         ArrayList<Integer> wList = new ArrayList<>(1);
         wList.add(w);
+
         return pathTo(vList, wList, false);
     }
 
