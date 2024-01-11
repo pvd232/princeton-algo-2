@@ -38,7 +38,7 @@ public class DiBFSPaths {
 
     private void bfs(Digraph G, Iterable<Integer> s) {
         Queue<Integer> q = new ArrayDeque<Integer>();
-        for (Integer next : s) {
+        for (int next : s) {
             q.add(next);
             marked[next] = true;
             distTo[next] = 0;
@@ -55,10 +55,13 @@ public class DiBFSPaths {
         }
     }
 
+    public int[] pathTo() {
+        return distTo.clone();
+    }
+
     public int dist(int w) {
         if (!marked[w])
             return -1;
-        else
-            return distTo[w];
+        return distTo[w];
     }
 }

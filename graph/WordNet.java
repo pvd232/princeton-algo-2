@@ -7,53 +7,52 @@ import edu.princeton.cs.algs4.DirectedCycle;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 
 public class WordNet {
-    private final ArrayList<Synset> verts;
+    private final ArrayList<String> s; // List of synsets
     private final Digraph g;
     private final SAP sap;
-    private final HashMap<String, LinkedList<Integer>> map;
+    private final HashMap<String, ArrayList<Integer>> nouns; // nouns with associated synset ids
 
     // Constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
         if (synsets == null || hypernyms == null)
             throw new IllegalArgumentException();
 
-        verts = new ArrayList<>();
+        s = new ArrayList<>();
         In synIn = new In(synsets), hyperIn = new In(hypernyms);
 
-        // Create adjacent verts array to store adjacent sets while processing input
+        // Synset-indexed array of corresponding hypernyms
         ArrayList<Bag<Integer>> adj = new ArrayList<>();
-        map = new HashMap<>();
 
-        int graphLen = 0;
+        nouns = new HashMap<>();
+
+        int lineNum = 0; // need fixed len for Graph constructor
         while (synIn.hasNextLine() && hyperIn.hasNextLine()) {
-            graphLen++; // need fixed len for Graph constructor
+            String[] parts = synIn.readLine().split(","), synsList = parts[1].split(" ");
+            String synset = parts[1];
+            s.add(synset); // Add synset to vertex-indexed array
 
-            Synset newSyn = new Synset(synIn.readLine());
-            verts.add(newSyn); // Create synset from curr line
-
-            for (String syn : newSyn.syns) {
-                if (map.containsKey(syn))
-                    map.get(syn).add(newSyn.id);
+            for (String syn : synsList) {
+                ArrayList<Integer> sList = nouns.get(syn); // List of synset ids associated with given noun
+                if (sList != null) // If noun exists, add synset id
+                    sList.add(lineNum);
                 else {
-                    LinkedList<Integer> newList = new LinkedList<>();
-                    newList.add(newSyn.id);
-                    map.put(syn, newList);
+                    ArrayList<Integer> newList = new ArrayList<>();
+                    newList.add(lineNum);
+                    nouns.put(syn, newList);
                 }
             }
+            lineNum++;
 
-            String[] rawAdj = hyperIn.readLine().split(","); // Read in adjacent verts
-            Bag<Integer> intAdj = new Bag<Integer>();
-            for (int i = 1; i < rawAdj.length; i++) // index on one b/c first value of hypernym line is id of vertex
-                intAdj.add(Integer.parseInt(rawAdj[i]));
-
-            adj.add(intAdj);
+            String[] currH = hyperIn.readLine().split(","); // Read in hypernym
+            Bag<Integer> hypers = new Bag<Integer>();
+            for (int i = 1; i < currH.length; i++) // index to 1 b/c first value of hypernym line is id of vertex
+                hypers.add(Integer.parseInt(currH[i]));
+            adj.add(hypers);
         }
         // Populate digraph
-        g = new Digraph(graphLen);
+        g = new Digraph(lineNum);
         for (int i = 0; i < adj.size(); i++) {
             Bag<Integer> adjBag = adj.get(i);
             for (int vert : adjBag)
@@ -68,74 +67,36 @@ public class WordNet {
         sap = new SAP(g);
     }
 
-    private class Synset {
-        private final HashSet<String> syns;
-        private final String synTxt;
-        private final int id;
-
-        private Synset(String csvLine) {
-            String[] parts = csvLine.split(","), synsList = parts[1].split(" ");
-            id = Integer.parseInt(parts[0]);
-            synTxt = parts[1];
-
-            syns = new HashSet<>();
-            for (int i = 0; i < synsList.length; i++)
-                syns.add(synsList[i]);
-        }
-    }
-
     // returns all WordNet nouns
     public Iterable<String> nouns() {
-        ArrayList<String> res = new ArrayList<>();
-        for (String key : map.keySet()) {
-            res.add(key);
-        }
-        return res;
+        return nouns.keySet();
     }
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
         if (word == null)
             throw new IllegalArgumentException();
-        return map.containsKey(word);
+        return nouns.containsKey(word);
     }
 
-    // Binary search to find id for given noun
-    private HashSet<Integer> subset(String word) {
-        HashSet<Integer> res = new HashSet<>();
-        for (Integer id : map.get(word))
-            res.add(id);
-        return res;
-    }
-
-    // distance between nounA and nounB (defined below)
+    // Distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
         if (nounA == null || nounB == null || !isNoun(nounA) || !isNoun(nounB))
             throw new IllegalArgumentException();
-
-        HashSet<Integer> a = subset(nounA), b = subset(nounB);
-        if (a.size() == 1 && b.size() == 1)
-            return sap.length(a.iterator().next(), b.iterator().next());
-        else
-            return sap.length(a, b);
+        return sap.length(nouns.get(nounA), nouns.get(nounB));
     }
 
-    // a synset that is the common ancestor of nounA and nounB
+    // Synset that is the common ancestor of nounA and nounB
     public String sap(String nounA, String nounB) {
         if (nounA == null || nounB == null || !isNoun(nounA) || !isNoun(nounB))
             throw new IllegalArgumentException();
-
-        HashSet<Integer> a = subset(nounA), b = subset(nounB);
-        if (a.size() == 1 && b.size() == 1)
-            return verts.get(sap.ancestor(a.iterator().next(), b.iterator().next())).synTxt;
-        else
-            return verts.get(sap.ancestor(a, b)).synTxt;
+        return s.get(sap.ancestor(nouns.get(nounA), nouns.get(nounB)));
     }
 
     // do unit testing of this class
     public static void main(String[] args) {
         WordNet testNet = new WordNet(args[0], args[1]);
-        assert testNet.g.V() == testNet.verts.size();
+        assert testNet.g.V() == testNet.s.size();
         assert testNet.isNoun("miracle");
         assert !testNet.isNoun("gooblegah");
 
