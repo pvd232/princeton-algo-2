@@ -3,16 +3,15 @@ package graph;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Bag;
 import edu.princeton.cs.algs4.Digraph;
-import edu.princeton.cs.algs4.DirectedCycle;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class WordNet {
     private final ArrayList<String> s; // List of synsets
+    private final HashMap<String, ArrayList<Integer>> nouns; // nouns with associated synset ids
     private final Digraph g;
     private final SAP sap;
-    private final HashMap<String, ArrayList<Integer>> nouns; // nouns with associated synset ids
 
     // Constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
@@ -47,7 +46,7 @@ public class WordNet {
 
             String[] currH = hyperIn.readLine().split(","); // Read in hypernym
             Bag<Integer> hypers = new Bag<Integer>();
-            for (int i = 1; i < currH.length; i++) // index to 1 b/c first value of hypernym line is id of vertex
+            for (int i = 1; i < currH.length; i++) // index to 1 b/c first value of hypernym line is synset id
                 hypers.add(Integer.parseInt(currH[i]));
             adj.add(hypers);
         }
@@ -58,12 +57,8 @@ public class WordNet {
             for (int vert : adjBag)
                 g.addEdge(i, vert);
         }
-
-        // Check for cycle
-        DirectedCycle dC = new DirectedCycle(g);
-        if (dC.hasCycle())
+        if (DigraphDC.hasCycle(g))
             throw new IllegalArgumentException();
-
         sap = new SAP(g);
     }
 

@@ -53,6 +53,8 @@ public class Outcast {
                 assert soln.equals("bed");
             if (args[t].contains("outcast11.txt"))
                 assert soln.equals("potato");
+            if (args[t].contains("outcast29.txt"))
+                assert soln.equals("acorn");
             StdOut.println(args[t] + ": " + soln);
         }
     }

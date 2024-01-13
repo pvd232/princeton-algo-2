@@ -64,19 +64,20 @@ public class SAP {
         int dist = -1, ancestor = -1;
         while (!q.isEmpty()) { // For each vertex, check for directed path to v and w
             int curr = q.dequeue();
+            for (int adj : g.adj(curr)) {
+                if (!marked[adj]) {
+                    int adjDist = distToV[adj] + distToW[adj];
+                    if (dist == -1 || adjDist < dist) { // Prune, only pursuing adj with shorter dist
+                        q.enqueue(adj);
+                        marked[adj] = true;
+                    }
+                }
+            }
             if (markedV[curr] && markedW[curr]) { // If vertex is reachable from v and w it's an ancestor
                 int tmpDist = distToV[curr] + distToW[curr];
                 if (dist == -1 || tmpDist < dist) { // If dist unset, or curr dist < dist, update
                     dist = tmpDist;
                     ancestor = curr;
-                }
-            }
-            for (int adj : g.adj(curr)) {
-                if (dist == -1 || distToV[adj] + distToW[adj] < dist) { // Prune, only pursuing adj with shorter dist
-                    if (!marked[adj]) {
-                        q.enqueue(adj);
-                        marked[adj] = true;
-                    }
                 }
             }
         }
@@ -111,20 +112,6 @@ public class SAP {
         return pathTo(vList, wList, false);
     }
 
-    // Length of shortest ancestral path between any vertex in v and any vertex in w
-    public int length(Iterable<Integer> v, Iterable<Integer> w) {
-        if (v == null || w == null)
-            throw new IllegalArgumentException();
-        for (Integer vert : v)
-            if (vert == null || vert >= n || vert < 0)
-                throw new IllegalArgumentException();
-        for (Integer vert : w)
-            if (vert == null || vert >= n || vert < 0)
-                throw new IllegalArgumentException();
-
-        return pathTo(v, w, true);
-    }
-
     // Common ancestor that participates in shortest ancestral path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
         if (v == null || w == null)
@@ -137,6 +124,20 @@ public class SAP {
                 throw new IllegalArgumentException();
 
         return pathTo(v, w, false);
+    }
+
+    // Length of shortest ancestral path between any vertex in v and any vertex in w
+    public int length(Iterable<Integer> v, Iterable<Integer> w) {
+        if (v == null || w == null)
+            throw new IllegalArgumentException();
+        for (Integer vert : v)
+            if (vert == null || vert >= n || vert < 0)
+                throw new IllegalArgumentException();
+        for (Integer vert : w)
+            if (vert == null || vert >= n || vert < 0)
+                throw new IllegalArgumentException();
+
+        return pathTo(v, w, true);
     }
 
     // do unit testing of this class
