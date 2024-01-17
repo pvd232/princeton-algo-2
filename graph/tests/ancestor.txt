@@ -1,0 +1,2 @@
+animal animate_being beast brute creature fauna,worm,bird
+physical_entity,edible_fruit,individual
