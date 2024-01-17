@@ -70,7 +70,7 @@ public class SAP {
 
         // boolean contV = true, contW = true;
         int dist = -1, ancestor = -1;
-        while (!currQ.isEmpty()) {
+        while (!currQ.isEmpty() && dist < 0 || distToV[currQ.peek()] + distToW[currQ.peek()] < dist) {
             int curr = currQ.dequeue();
             for (int adj : g.adj(curr)) {
                 if (!currMarked[adj]) {
@@ -87,13 +87,12 @@ public class SAP {
                 ancestor = curr;
             }
 
-            if (dist > 0 && tmpDist > dist) {
-                // if (currQ.equals(vQ))
-                // contV = false;
-                // else
-                // contW = false;
-                break;
-            }
+            // if (dist > 0 && tmpDist > dist) {
+            // if (currQ.equals(vQ))
+            // contV = false;
+            // else
+            // contW = false;
+            // }
 
             if (currQ.equals(vQ) && !wQ.isEmpty()) {
                 currQ = wQ;
