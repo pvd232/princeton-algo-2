@@ -34,7 +34,7 @@ public class WordNet {
     private int parseSyns(String synsets) {
         In synIn = new In(synsets);
 
-        int n = 0;
+        int cnt = 0;
         while (synIn.hasNextLine()) {
             String[] parts = synIn.readLine().split(","), synsList = parts[1].split(" ");
             String synset = parts[1];
@@ -43,16 +43,16 @@ public class WordNet {
             for (String syn : synsList) {
                 ArrayList<Integer> sList = nouns.get(syn); // List of synset ids associated with given noun
                 if (sList != null) // If noun exists already, add synset id
-                    sList.add(n);
+                    sList.add(cnt);
                 else {
                     ArrayList<Integer> newList = new ArrayList<>();
-                    newList.add(n);
+                    newList.add(cnt);
                     nouns.put(syn, newList);
                 }
             }
-            n++;
+            cnt++;
         }
-        return n;
+        return cnt;
     }
 
     private ArrayList<Bag<Integer>> parseHypers(String hypernyms) {
@@ -73,8 +73,8 @@ public class WordNet {
         return hypers;
     }
 
-    private Digraph mkDigraph(int n, ArrayList<Bag<Integer>> hypers) {
-        Digraph diG = new Digraph(n);
+    private Digraph mkDigraph(int len, ArrayList<Bag<Integer>> hypers) {
+        Digraph diG = new Digraph(len);
         for (int i = 0; i < hypers.size(); i++) {
             Bag<Integer> hyper = hypers.get(i);
             for (int synset : hyper)

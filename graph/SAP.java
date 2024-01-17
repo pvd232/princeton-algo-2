@@ -29,31 +29,10 @@ public class SAP {
         markedW = new boolean[n];
     }
 
-    private void bfs(Iterable<Integer> s, Stack<Integer> changed) {
-        Queue<Integer> q = new Queue<Integer>();
-
-        for (int next : s) {
-            q.enqueue(next);
-            changed.push(next);
-            markedV[next] = true;
-        }
-        while (!q.isEmpty()) {
-            int v = q.dequeue();
-            for (int w : g.adj(v))
-                if (!markedV[w]) {
-                    q.enqueue(w);
-                    changed.push(w);
-                    markedV[w] = true;
-                    distToV[w] = distToV[v] + 1;
-                }
-        }
-    }
-
     // Finds the shortest ancestral path of vertices in v and w shortest path arrays
     private int pathTo(Iterable<Integer> v, Iterable<Integer> w, boolean length) {
         Stack<Integer> changedV = new Stack<>(), changedW = new Stack<>();
-        bfs(v, changedV);
-        int res = sp(w, length, changedW);
+        int res = sp(v, w, changedV, changedW, length);
 
         // Cleanup
         while (!changedV.isEmpty()) {
@@ -69,30 +48,63 @@ public class SAP {
         return res;
     }
 
-    private int sp(Iterable<Integer> w, boolean length, Stack<Integer> changed) {
-        Queue<Integer> q = new Queue<>();
+    private int sp(Iterable<Integer> v, Iterable<Integer> w, Stack<Integer> changedV, Stack<Integer> changedW,
+            boolean length) {
+        Queue<Integer> vQ = new Queue<>(), wQ = new Queue<>();
+
+        for (int vert : v) {
+            vQ.enqueue(vert);
+            changedV.push(vert);
+            markedV[vert] = true;
+        }
         for (int vert : w) {
-            q.enqueue(vert);
-            changed.push(vert);
+            wQ.enqueue(vert);
+            changedW.push(vert);
             markedW[vert] = true;
         }
+
+        Queue<Integer> currQ = vQ;
+        int[] currDist = distToV;
+        boolean[] currMarked = markedV;
+        Stack<Integer> currChanged = changedV;
+
+        // boolean contV = true, contW = true;
         int dist = -1, ancestor = -1;
-        while (!q.isEmpty()) { // For each vertex, check for directed path to v and w
-            int curr = q.dequeue();
+        while (!currQ.isEmpty()) {
+            int curr = currQ.dequeue();
             for (int adj : g.adj(curr)) {
-                if (!markedW[adj]) {
-                    q.enqueue(adj);
-                    changed.push(adj);
-                    markedW[adj] = true;
-                    distToW[adj] = distToW[curr] + 1;
+                if (!currMarked[adj]) {
+                    currQ.enqueue(adj);
+                    currChanged.push(adj);
+                    currMarked[adj] = true;
+                    currDist[adj] = currDist[curr] + 1;
                 }
             }
-            if (markedV[curr]) { // If vertex is reachable from v and w it's an ancestor
-                int tmpDist = distToV[curr] + distToW[curr];
-                if (dist == -1 || tmpDist < dist) { // If dist unset, or curr dist < dist, update
-                    dist = tmpDist;
-                    ancestor = curr;
-                }
+
+            int tmpDist = distToV[curr] + distToW[curr];
+            if (markedV[curr] && markedW[curr] && (dist < 0 || tmpDist < dist)) {
+                dist = tmpDist;
+                ancestor = curr;
+            }
+
+            if (dist > 0 && tmpDist > dist) {
+                // if (currQ.equals(vQ))
+                // contV = false;
+                // else
+                // contW = false;
+                break;
+            }
+
+            if (currQ.equals(vQ) && !wQ.isEmpty()) {
+                currQ = wQ;
+                currDist = distToW;
+                currMarked = markedW;
+                currChanged = changedW;
+            } else if (currQ.equals(wQ) && !vQ.isEmpty()) {
+                currQ = vQ;
+                currDist = distToV;
+                currMarked = markedV;
+                currChanged = changedV;
             }
         }
         if (length)
