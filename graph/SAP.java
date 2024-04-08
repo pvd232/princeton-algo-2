@@ -52,6 +52,7 @@ public class SAP {
             boolean length) {
         Queue<Integer> vQ = new Queue<>(), wQ = new Queue<>();
 
+        // Load up search queues
         for (int vert : v) {
             vQ.enqueue(vert);
             changedV.push(vert);
@@ -63,43 +64,56 @@ public class SAP {
             markedW[vert] = true;
         }
 
-        Queue<Integer> currQ = vQ;
-        int[] currDist = distToV;
-        boolean[] currMarked = markedV;
-        Stack<Integer> currChanged = changedV;
+        Queue<Integer> currQ; // pointer to queue currently being explored
+        int[] currDist; // pointer to dist array currently being used
+        boolean[] currMarked; // pointer to marked array currently being used
+        Stack<Integer> currChanged; // pointer to changed verts stack currently being used
+        boolean isV = true;
+        if (!vQ.isEmpty()) {
+            currQ = vQ;
+            currDist = distToV;
+            currMarked = markedV;
+            currChanged = changedV;
+        } else {
+            currQ = wQ;
+            currDist = distToW;
+            currMarked = markedW;
+            currChanged = changedW;
+            isV = false;
+        }
 
-        // boolean contV = true, contW = true;
         int dist = -1, ancestor = -1;
-        while (!currQ.isEmpty() && dist < 0 || distToV[currQ.peek()] + distToW[currQ.peek()] < dist) {
+        while (!currQ.isEmpty()) { // While exploration queue not empty
             int curr = currQ.dequeue();
-            for (int adj : g.adj(curr)) {
-                if (!currMarked[adj]) {
-                    currQ.enqueue(adj);
-                    currChanged.push(adj);
-                    currMarked[adj] = true;
-                    currDist[adj] = currDist[curr] + 1;
-                }
-            }
-
             int tmpDist = distToV[curr] + distToW[curr];
-            if (markedV[curr] && markedW[curr] && (dist < 0 || tmpDist < dist)) {
+            if (markedV[curr] && markedW[curr] && (dist < 0 || tmpDist < dist)) { // ancestor && dist unset or less
                 dist = tmpDist;
                 ancestor = curr;
             }
+            if ((dist < 0 || currDist[curr] < dist))
+                for (int adj : g.adj(curr)) {
+                    if (!currMarked[adj]) {
+                        currDist[adj] = currDist[curr] + 1;
+                        currMarked[adj] = true;
+                        currQ.enqueue(adj);
+                        currChanged.push(adj);
+                    }
+                }
 
-            // if (dist > 0 && tmpDist > dist) {
-            // if (currQ.equals(vQ))
-            // contV = false;
-            // else
-            // contW = false;
-            // }
+            if (currQ.isEmpty())
+                if (isV)
+                    vQ = null;
+                else
+                    wQ = null;
 
-            if (currQ.equals(vQ) && !wQ.isEmpty()) {
+            if (isV && wQ != null) {
+                isV = false;
                 currQ = wQ;
                 currDist = distToW;
                 currMarked = markedW;
                 currChanged = changedW;
-            } else if (currQ.equals(wQ) && !vQ.isEmpty()) {
+            } else if (!isV && vQ != null) {
+                isV = true;
                 currQ = vQ;
                 currDist = distToV;
                 currMarked = markedV;
@@ -109,6 +123,7 @@ public class SAP {
         if (length)
             return dist;
         return ancestor;
+
     }
 
     // Length of shortest ancestral path between v and w

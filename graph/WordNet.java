@@ -11,7 +11,6 @@ public class WordNet {
     private final ArrayList<String> syns; // List of synsets
     private final HashMap<String, ArrayList<Integer>> nouns; // nouns with associated synset ids
     private final SAP sap;
-    private final int n;
 
     // Constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
@@ -21,8 +20,8 @@ public class WordNet {
         nouns = new HashMap<>();
         syns = new ArrayList<>();
 
-        n = parseSyns(synsets);
-        ArrayList<Bag<Integer>> hypers = parseHypers(hypernyms);
+        int n = parseSyns(synsets);
+        ArrayList<Bag<Integer>> hypers = parseHypers(n, hypernyms);
         Digraph g = mkDigraph(n, hypers);
 
         if (DigraphDC.hasCycle(g))
@@ -55,7 +54,7 @@ public class WordNet {
         return cnt;
     }
 
-    private ArrayList<Bag<Integer>> parseHypers(String hypernyms) {
+    private ArrayList<Bag<Integer>> parseHypers(int n, String hypernyms) {
         // Synset-indexed array of corresponding hypernyms
         ArrayList<Bag<Integer>> hypers = new ArrayList<>();
         In hyperIn = new In(hypernyms);
