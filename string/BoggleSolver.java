@@ -1,13 +1,117 @@
 package string;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import edu.princeton.cs.algs4.In;
+import java.util.Collections;
 
 public class BoggleSolver {
     private static final int[] DIR = { -1, 1 };
     private final TrieST dict;
-    private int m;
-    private int n;
+    private int m = 0;
+    private int n = 0;
+    private int[][] adj;
+    private char[][] g;
+    private boolean[][] visited;
+    private static final int R = 26;
+
+    private static class Node {
+        private String val;
+        private String path;
+        private boolean isParent;
+        private int id = -1;
+        private final Node[] next = new Node[R];
+    }
+
+    private class TrieST {
+        private Node root = new Node();
+        private Node prev = new Node();
+        private int cnt = 0;
+
+        public void put(String key) {
+            root = put(root, key, 0, key.length());
+        }
+
+        private Node put(Node x, String key, int d, int n) {
+            if (x == null)
+                x = new Node();
+            if (d == n) {
+                if (n > 2)
+                    x.val = key;
+                x.path = key;
+                return x;
+            }
+            int c = key.charAt(d) - 65;
+            if (x.path == null)
+                x.path = key.substring(0, d);
+            x.isParent = true;
+            x.next[c] = put(x.next[c], key, d + 1, n);
+            return x;
+        }
+
+        private Node get(Node x, String key, int d, char ch, int n) {
+            if (x == null)
+                return null;
+            else if (d < n)
+                return get(x.next[key.charAt(d) - 65], key, d + 1, ch, n);
+            else if (d == n)
+                if (ch == 'Q')
+                    return get(x.next[ch - 65], key, d, 'U', n);
+                else
+                    return get(x.next[ch - 65], key, d + 1, ch, n);
+            return x;
+        }
+
+        // Returns the Node for a given key
+        private Node get(Node x, String key, int d, int n) {
+            if (x == null || d == n)
+                return x;
+            return get(x.next[key.charAt(d) - 65], key, d + 1, n);
+        }
+
+        private String get(String key) {
+            Node x = get(root, key, 0, key.length());
+            if (x == null)
+                return null;
+            return x.val;
+        }
+
+        public boolean contains(String key) {
+            return get(key) != null;
+        }
+
+        public Node prefix(Node old, char c) {
+            Node x;
+            int n = old.path.length();
+            if (old.equals(prev))
+                x = get(prev, old.path, n, c, n);
+            else
+                x = get(root, old.path, 0, c, n);
+            if (x == null)
+                return null;
+            else {
+                prev = x;
+                return x;
+            }
+        }
+
+        // Node will always exist
+        public boolean hasKids(Node key, ArrayList<String> res) {
+            Node x;
+            if (key.equals(prev))
+                x = prev;
+            else
+                x = get(root, key.val, 0, key.val.length());
+            if (x.val != null && x.id != cnt) {
+                x.id = cnt;
+                res.add(key.val);
+            }
+            return x.isParent;
+        }
+
+        public void setCnt() {
+            this.cnt++;
+        }
+    }
 
     // Initializes the data struct w/given array of strings as the dictionary
     public BoggleSolver(String[] dictionary) { // Assume each word in the dict contains only uppercase letters A - Z
@@ -16,25 +120,40 @@ public class BoggleSolver {
         dict = new TrieST();
         for (String s : dictionary)
             dict.put(s);
+        adj = new int[16][];
+        g = new char[4][4];
+        visited = new boolean[4][4];
     }
 
     // Returns the set of all valid words in the given Boggle board, as an Iterable.
     public Iterable<String> getAllValidWords(BoggleBoard board) {
         if (board == null)
             throw new IllegalArgumentException();
-        m = board.cols();
-        n = board.rows();
 
-        int[][] adj = new int[n * m][]; // Precompute each tile's adjacent tiles
-        char[][] g = new char[n][m];
+        boolean wasChanged = false;
+        if (board.rows() != n || board.cols() != m) {
+            m = board.cols();
+            n = board.rows();
+            wasChanged = true;
+        }
+
+        if (n * m > adj.length)
+            adj = new int[n * m][];
+
+        if (n > g.length || m > g[0].length) {
+            g = new char[n][m];
+            visited = new boolean[n][m];
+        }
 
         // Build the graph
         for (int i = 0; i < n; i++)
             for (int j = 0; j < m; j++) {
                 g[i][j] = board.getLetter(i, j);
-                adj[i * m + j] = adjN(i, j);
+                int k = i * m + j;
+                if (wasChanged || adj[k] == null)
+                    adj[k] = adjN(i, j); // Precompute each tile's adjacent tiles
             }
-        return findWords(board, adj, g);
+        return findWords(board);
     }
 
     private int[] adjN(int i, int j) {
@@ -109,35 +228,35 @@ public class BoggleSolver {
     }
 
     // Create wrapper function to store results globally
-    private Iterable<String> findWords(BoggleBoard board, int[][] adj, char[][] g) {
-        HashSet<String> res = new HashSet<>();
-        boolean[][] visited = new boolean[n][m];
+    private Iterable<String> findWords(BoggleBoard board) {
+        ArrayList<String> res = new ArrayList<>();
 
         for (int i = 0; i < n; i++)
             for (int j = 0; j < m; j++) {
-                String wNew = dict.prefix("", g[i][j]);
+                Node wNew = dict.prefix(null, g[i][j]);
                 if (wNew != null) {
                     visited[i][j] = true;
-                    findWords(board, adj, g, visited, new int[] { i, j }, wNew, res);
+                    findWords(board, new int[] { i, j }, wNew, res);
                     visited[i][j] = false; // Backtrack after recursive call completes
                 }
             }
+        dict.setCnt();
         return res;
     }
 
     // Recursive DFS enumeration
-    private void findWords(BoggleBoard board, int[][] adj, char[][] g, boolean[][] visited, int[] coord, String w,
-            HashSet<String> res) {
+    private void findWords(BoggleBoard board, int[] coord, Node w,
+            ArrayList<String> res) {
         if (dict.hasKids(w, res)) // If != trie leaf, explore adj
             for (int p : adj[coord[0] * m + coord[1]]) {
                 int row = p / m, col = p % m;
                 coord[0] = row;
                 coord[1] = col;
                 if (!visited[row][col]) {
-                    String wNew = dict.prefix(w, g[row][col]);
+                    Node wNew = dict.prefix(w, g[row][col]);
                     if (wNew != null) {
                         visited[row][col] = true;
-                        findWords(board, adj, g, visited, coord, wNew, res);
+                        findWords(board, coord, wNew, res);
                         visited[row][col] = false;
                     }
                 }
@@ -165,32 +284,32 @@ public class BoggleSolver {
     public static void main(String[] args) {
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
+
         BoggleSolver solver = new BoggleSolver(dictionary);
-        // int count = 0;
         BoggleBoard board = new BoggleBoard(args[1]);
         long startTime = System.currentTimeMillis();
-        solver.getAllValidWords(board);
-        long endTime = System.currentTimeMillis() - startTime;
-        System.out.println("Time: " + endTime);
-        // while (System.currentTimeMillis() - startTime <= 5000) {
-        // BoggleBoard testBoard = new BoggleBoard();
-        // solver.getAllValidWords(testBoard);
-        // count++;
-        // }
 
-        // BoggleBoard board = new BoggleBoard(args[1]);
+        int count = 0;
+        while (System.currentTimeMillis() - startTime <= 5000) {
+            // BoggleBoard testBoard = new BoggleBoard();
+            solver.getAllValidWords(board);
+            count++;
+        }
 
-        // Iterable<String> res = solver.getAllValidWords(board);
-        // ArrayList<String> resSorted = new ArrayList<>();
-        // for (String s : res)
-        // resSorted.add(s);
-        // Collections.sort(resSorted);
-        // int score = 0, wordCount = 0;
-        // for (String word : res) {
-        // System.out.println("word " + word);
-        // score += solver.scoreOf(word);
-        // }
-        // System.out.println("Calls per second: " + count / 5);
-        // System.out.println("Score = " + score + " Word count = " + wordCount);
+        BoggleBoard otherBoard = new BoggleBoard(4, 5);
+
+        Iterable<String> res = solver.getAllValidWords(otherBoard);
+        ArrayList<String> resSorted = new ArrayList<>();
+        for (String s : res)
+            resSorted.add(s);
+
+        Collections.sort(resSorted);
+        int score = 0, wordCount = 0;
+        for (String word : res) {
+            // System.out.println("word " + word);
+            score += solver.scoreOf(word);
+        }
+        System.out.println("Calls per second: " + count / 5);
+        System.out.println("Score = " + score + " Word count = " + wordCount);
     }
 }
